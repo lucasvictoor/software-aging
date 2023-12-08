@@ -1,0 +1,25 @@
+global alloc, fallback, fragmenting = 0
+
+global who
+probe kernel.trace("mm_page_alloc_extfrag"){
+	who[execname(),pid(),pexecname(),ppid(),cmdline_arg(0)] <<<1
+	alloc = $alloc_order
+	fallback = $fallback_order
+	if(fallback<alloc){
+		fragmenting++
+	}	
+}
+
+probe begin{
+
+	printf("\nProbing...\n")
+	printf("ocorrencia : %d\n", fragmenting)
+
+}
+
+probe end{
+	printf("Processo,PPID,comando,ocorrencias\n")
+	foreach([process,pid,pexecname,ppid,cmdline_arg] in who)
+		printf("%s(%d),%s(%d),%s,%d\n", process,pid,pexecname,ppid,cmdline_arg,@count(who[process,pid,pexecname,ppid,cmdline_arg]));
+}
+

@@ -1,0 +1,43 @@
+global alloc, fallback, fragmenting = 0, index = 0
+global who[100]
+
+probe kernel.trace("mm_page_alloc_extfrag"){	
+	if(who[execname(),pid(),pexecname(),ppid(),uid()] == 0){
+		if(index == 100){  //o vetor encheu
+			index = 0
+			imprime_processos()
+			delete who
+			printf("\n\n>>> Vetor esvaziado\n\n,")
+		}
+		//printf("Processo: %s(%d) / Pai: %s(%d) / UID: %d,", execname(),pid(),pexecname(),ppid(),uid())
+		index++
+	}
+	who[execname(),pid(),pexecname(),ppid(),uid()]++
+	alloc = $alloc_order
+	fallback = $fallback_order	
+	if(fallback<alloc){
+		fragmenting++
+	}
+}
+
+probe begin{
+	printf("process;parent;UID;process_occurrences;fragmented;datetime\n");
+}
+
+function imprime_processos() {
+    date = ctime(gettimeofday_s());
+	foreach([process,pid,pexecname,ppid,uid] in who){
+        occurrences = who[process,pid,pexecname,ppid,uid];
+		printf("%s(%d);%s(%d);%d;%d;%d;%s\n", process, pid, pexecname, ppid, uid, occurrences, fragmenting, date);
+	}
+}
+
+//tempo a cada impressao dos valores
+probe timer.s(120) {
+	imprime_processos();
+}
+
+probe end{
+    imprime_processos();
+}
+

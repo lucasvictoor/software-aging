@@ -1,0 +1,40 @@
+global alloc, fallback, fragmenting = 0, cont=0
+global intervalo=1000
+global min_relevante=10
+
+global who, arr
+probe kernel.trace("mm_page_alloc_extfrag"){
+	cont++
+	arr[execname(),pid(),pexecname(),ppid(),uid()] <<<1
+	alloc = $alloc_order
+	fallback = $fallback_order
+	if(fallback<alloc){
+		fragmenting++
+	}
+	if(cont == intervalo) {
+		reduz()
+		cont=0
+	}	
+}
+
+function reduz(){
+	foreach([process,pid,pexecname,ppid,uid] in arr)
+		if (@count(arr[process,pid,pexecname,ppid,uid]) >= min_relevante)
+    			who[process,pid,pexecname,ppid,uid] <<< @count(arr[process,pid,pexecname,ppid,uid]);
+		delete arr
+}
+
+probe begin{
+
+	printf("\nProbing...\n")
+
+}
+
+probe end{
+	reduz()
+	printf("Processo,Pai,ocorrencias\n")
+	foreach([process,pid,pexecname,ppid,uid] in who)
+		printf("%s(%d),%s(%d),%d,%d\n", process,pid,pexecname,ppid,uid,@sum(who[process,pid,pexecname,ppid,uid]));
+	printf("ocorrencia : %d\n", fragmenting)
+}
+

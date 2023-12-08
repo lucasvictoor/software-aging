@@ -1,0 +1,89 @@
+#!/bin/bash
+
+source ./vbox_functions.sh
+
+#Time method
+minutes=0
+
+#Control variables
+reboot_count=0
+
+#reboot types
+force=0
+soft=0
+ssh=0
+
+function print_usage() {
+  echo "script usage $(basename "$0")  [-t <integer> minutes] [-m <integer> mb] [-f (forced reboot)] [-s (soft reboot)] [-ssh (ssh reboot)]" >&1
+}
+
+if [[ "$1" =~ ^((-{1,2})([Hh]$|[Hh][Ee][Ll][Pp])|)$ ]]; then
+  print_usage
+  exit 0
+else
+  while [[ $# -gt 0 ]]; do
+    opt="$1"
+    shift
+    current_arg="$1"
+    if [[ "$current_arg" =~ ^-{1,2}.* ]]; then
+      echo "WARNING: You may have left an argument blank. Double-check your command."
+      exit 1
+    fi
+    case "$opt" in
+    "-t" | "--time")
+      minutes=$1
+      echo "Iniciando testes de rejuvenescimento | A MV irá reinciar a cada $minutes minutos"
+      shift
+      ;;
+    "-f" | "--force")
+      force=1
+      shift
+      ;;
+    "-s" | "--soft")
+      soft=1
+      shift
+      ;;
+    "-ssh" | "--ssh")
+      ssh=1
+      shift
+      ;;
+    "-h" | "--help")
+      print_usage
+      exit 0
+      ;;
+    *)
+      echo "ERROR: Invalid option: \"$opt\"" >&2
+      print_usage
+      exit 1
+      ;;
+    esac
+  done
+fi
+
+function REBOOT_VM() {
+  ((reboot_count++))
+  echo "Rebooting VM - Reboot count: $reboot_count"
+  if [ "$soft" -eq 1 ]; then
+    GRACEFUL_REBOOT
+  fi
+
+  if [ "$ssh" -eq 1 ]; then
+    SSH_REBOOT
+  fi
+
+  if [ "$force" -eq 1 ]; then
+    FORCED_REBOOT
+  fi
+}
+
+START_VM
+
+./workload.sh &
+./machine_resources_monitoring/run &
+
+while true; do
+  :
+  sleep "$minutes"m
+
+  REBOOT_VM
+done

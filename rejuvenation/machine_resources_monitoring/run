@@ -1,0 +1,35 @@
+#!/bin/bash
+
+function headers() {
+  mkdir -p logs
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/monitoring-VBoxSVC.csv
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/monitoring-VBoxHeadless.csv
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/monitoring-VBoxXPCOMIPCD.csv
+  echo "usr;nice;sys;iowait;soft;date_time" >logs/monitoring-cpu.csv
+  echo "used;date_time" >logs/monitoring-disk.csv
+  echo "used;cached;buffer;swap-free;date_time" >logs/monitoring-mem.csv
+  echo "num_zombies;date_time" >logs/monitoring-zombies.csv
+  echo "offline_times;seconds;date_time" >logs/server_status.csv
+}
+
+headers
+
+stap -o logs/fragmentation.txt memory_fragmentation/fragmentation2b.stp &
+
+processes/monitoring-VBoxXPCOMIPCD.sh &
+processes/monitoring-VBoxHeadless.sh &
+processes/monitoring-VBoxSVC.sh &
+
+general_resources/server-down-count.sh &
+
+while true; do
+  :
+  date_time=$(date +%d-%m-%Y-%H:%M:%S)
+
+  source general_resources/monitoring-cpu.sh
+  source general_resources/monitoring-disk.sh
+  source general_resources/monitoring-mem.sh
+  source general_resources/monitoring-zombies.sh
+
+  sleep 1
+done

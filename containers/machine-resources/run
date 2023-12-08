@@ -1,0 +1,26 @@
+#!/bin/bash
+
+function headers() {
+  mkdir -p logs
+  echo "usr;nice;sys;iowait;soft;iteration;date_time" >logs/monitoramento-cpu.csv
+  echo "used;kB_read;kB_wrtn;iteration;date_time" >logs/monitoramento-disco.csv
+  echo "used;cached;buffer;swap-free;iteration;date_time" >logs/monitoramento-mem.csv
+  echo "num_zumbis;iteration;date_time" >logs/monitoramento-zumbis.csv
+  echo "bytes_received;packet_received;iteration;date_time" >log-download.csv
+  echo "bytes_sent;packet_sent;iteration;date_time" >log-upload.csv
+}
+
+headers
+
+while true; do
+  :
+  date_time=$(date +%d-%m-%Y-%H:%M:%S)
+  iteration=$(cat current_interation.txt)
+
+  source machine-resources/monitoramento-cpu.sh
+  source machine-resources/monitoramento-mem.sh
+  source machine-resources/monitoramento-zumbis.sh
+  #Inside the monitoramento-rede-disco we have to wait one second
+  source machine-resources/monitoramento-rede-disco.sh
+
+done
