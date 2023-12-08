@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ############################ IMPORTS
-source ../vbox_functions.sh
+source ../../vbox_functions.sh
 
 # UTILS
 #   ERROR HANDLE
@@ -24,7 +24,7 @@ readonly import_modify="Importing vmDebian.ova and modifying vmDebian ports and 
 # DESCRIPTION:
 #   checks if the virtual machine file vmDebian.ova is in a folder before the rejuvenation folder
 CHECK_DEBIAN_IMAGE() {
-  read -r -p "Have you copied the VM vmDebian.ova file? It should have been put one level before the rejuvenation folder (y/n): " copy
+  read -r -p "Have you copied the VM vmDebian.ova file? It should have been put inside the setup folder (y/n): " copy
 
   if [ "$copy" != "y" ]; then
     echo -e "right, copy the debian system image to the location provided!\n"
@@ -32,19 +32,10 @@ CHECK_DEBIAN_IMAGE() {
   fi
 }
 
-# CONTROL_VIRTUAL_MACHINE
-# DESCRIPTION:
-#   TURN_VM_OFF:
-#     try to turn off the virtual machine
-#   
-#   DELETE_VM:
-#     Attempts to unregister the virtual machine and delete all files associated with it
-#
-#   CREATE_VM:
-#     import the virtual machine vmDebian.ova
-#     Attempts to modify the virtual machine to forward traffic from host port 8080 to virtual machine port 80
-CONTROL_VIRTUAL_MACHINE() {
-  cd ..
+
+CREATE_VIRTUAL_MACHINE() {
+  CHECK_DEBIAN_IMAGE
+
   TURN_VM_OFF
   ERROR_HANDLING "$poweroff" 0
 
@@ -53,7 +44,7 @@ CONTROL_VIRTUAL_MACHINE() {
 
   CREATE_VM
   ERROR_HANDLING "$import_modify" 0
-  cd setup || exit
+  cd .. || exit
 }
 
 # DISKS_MANAGMENT
@@ -69,20 +60,11 @@ CONTROL_VIRTUAL_MACHINE() {
 #     disks_quantity=50
 #     disks_size=1024
 DISKS_MANAGMENT() {
-  local create_disks=$1
-  local remove_disks=$2
+  REMOVE_DISKS
+  ERROR_HANDLING "ERROR REMOVING DISKS" 0
 
-  $remove_disks
-
-  # define a desired quantity and size of disks to perform the tests
-  local disks_quantity=50
-  local disks_size=10
-
-  if ! $create_disks $disks_quantity $disks_size; then
-    echo -e "ERROR: error creating disk\n"
-  else
-    echo -e "SUCCESS: success in creating disks of quantity $disks_quantity and size $disks_size\n"
-  fi
+  CREATE_DISKS 50 1024
+  ERROR_HANDLING "ERROR CREATING DISKS" 0
 }
 
 # START_VIRTUAL_MACHINE_IN_BACKGROUND
@@ -105,12 +87,18 @@ START_VIRTUAL_MACHINE_IN_BACKGROUND() {
 #
 #   curl:
 #       check whether the request to the server was successful
-COPY_SSH_ID_AND_TEST_VIRTUAL_MACHINE_SERVER() {
-  if ! ssh-copy-id -i /root/.ssh/id_rsa.pub -p 2222 root@localhost; then
-    echo -e "ERROR: error when trying to connect to vmDebian via ssh\n"
-  fi
-
+TEST_VIRTUAL_MACHINE_SERVER() {
+  sleep 10
   if ! curl http://localhost:8080; then
     echo -e "ERROR: error when trying to start vmDebian's nginx server\n"
   fi
 }
+
+SETUP_VM() {
+  DISKS_MANAGMENT
+  CREATE_VIRTUAL_MACHINE
+  START_VM
+  TEST_VIRTUAL_MACHINE_SERVER
+}
+
+SETUP_VM

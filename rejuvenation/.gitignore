@@ -1,2 +1,5 @@
 /logs
 /disks
+/machine_resources_monitoring/logs
+/setup/disks
+.idea

@@ -12,7 +12,7 @@ readonly wait_time_after_detach=10
 
 WORKLOAD() {
   local count_disks=1
-  local disk_path="disks/disk"
+  local disk_path="setup/disks/disk"
   local max_disks=50
 
   while true; do

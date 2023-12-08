@@ -9,7 +9,7 @@ while true; do
     started_at=$(date +%s)
   fi
 
-  response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080)
+  response=$(curl -s -o /dev/null -w "%{http_code}"  -m 5  http://localhost:8080)
 
   if [ "$response" -eq 200 ]; then
     if [ "$is_offline" -eq 1 ]; then

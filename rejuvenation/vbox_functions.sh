@@ -64,7 +64,7 @@ SSH_REBOOT() {
 #   VBoxManage modifyvm vmDebian --natpf1 "porta 8080,tcp,$host_ip,8080,,80"
 CREATE_VM() {
   local host_ip
-  host_ip=$(hostname -I)
+  host_ip=$(hostname -I | awk '{print $1}')
 
   vboxmanage import vmDebian.ova
   vboxmanage modifyvm vmDebian --natpf1 "porta 8080,tcp,$host_ip,8080,,80"
@@ -97,7 +97,7 @@ CREATE_DISKS() {
   mkdir -p ../disks
 
   while [[ "$count" -le "$disks_quantity" ]]; do
-    VBoxManage createmedium disk --filename ../disks/disk$count.vhd --size "$disk_size" --format VHD --variant Fixed
+    vboxmanage createmedium disk --filename ../disks/disk$count.vhd --size "$disk_size" --format VHD --variant Fixed
     ((count++))
   done
 }
