@@ -18,7 +18,7 @@ TURN_VM_OFF() {
 
 # FUNCTION=DELETE_VM()
 # DESCRIPTION:
-#   Unregisters the virtual machine and delete all files associated with it
+#   Unregisters the virtual machine and deletes all files associated with it
 #
 # VBOX COMMANDS:
 #   VBoxManage unregistervm vmDebian --delete
@@ -28,7 +28,7 @@ DELETE_VM() {
 
 # FUNCTION=GRACEFUL_REBOOT()
 # DESCRIPTION:
-#   Initiates a graceful reboot using ACPI power button. It has the same effect of pressing the power button on a physical pc.
+#   Initiates a graceful reboot using ACPI power button. It has the same effect of pressing the power button on a physical computer
 #
 # VBOX COMMANDS:
 #   VBoxManage controlvm "$VM_NAME" acpipowerbutton
@@ -42,7 +42,7 @@ GRACEFUL_REBOOT() {
 
 # FUNCTION=FORCED_REBOOT()
 # DESCRIPTION:
-#   Initiates a forced reboot.
+#   Initiates a forced reboot
 #
 # VBOX COMMANDS:
 #   VBoxManage controlvm "$VM_NAME" reset

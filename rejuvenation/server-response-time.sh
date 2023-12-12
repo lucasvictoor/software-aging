@@ -1,41 +1,41 @@
 #!/bin/bash
 
 # usage ./remoteServiceResponse.sh 192.168.0.109 8080 6
-# Define a ADDRESS do servidor
+# Define the server ADDRESS
 ADDRESS=$1
 PORT=$2
 LIMIT=${3:-0}
-#LIMIT é o tempo de resposta médio máximo aceitável
+# LIMIT is the maximum acceptable average response time
 
-# Cria o cabeçalho do arquivo CSV
+# Create the CSV file header
 echo "date_time;response_time" >response_times.csv
 echo "reset_date_time" >reset_times.csv
 
 ITEMS=(0 0 0 0 0 0)
 count=0
 
-function media_array {
-  local soma=0
-  local num_elementos="${#ITEMS[@]}"
+function calculate_array_mean {
+  local sum=0
+  local num_elements="${#ITEMS[@]}"
 
-  # itera sobre os valores do array e soma os valores
-  for valor in "${ITEMS[@]}"; do
-    soma=$(echo "$soma + $valor" | bc -l)
+  # Iterate over the array values and sum them
+  for value in "${ITEMS[@]}"; do
+    sum=$(echo "$sum + $value" | bc -l)
   done
-  # calcula a média
-  media=$(echo "$soma / $num_elementos" | bc -l)
+  # Calculate the mean
+  mean=$(echo "$sum / $num_elements" | bc -l)
 
-  # arredonda a média para o inteiro mais próximo
-  media_arredondada=$(echo "($media + 0.5) / 1" | bc)
-  echo "$media_arredondada"
+  # Round the mean to the nearest integer
+  rounded_mean=$(echo "($mean + 0.5) / 1" | bc)
+  echo "$rounded_mean"
 }
 
-# Loop infinito para medir o tempo de resposta
+# Infinite loop to measure response time
 while true; do
-  # Captura o timestamp atual
+  # Capture the current timestamp
   timestamp=$(date +%d-%m-%Y-%H:%M:%S)
 
-  # Faz a requisição HTTP e captura o tempo de resposta
+  # Make the HTTP request and capture the response time
   response=$(curl -w "%{http_code}  %{time_total}" -o /dev/null -s "http://$ADDRESS:$PORT")
   code=$(echo "$response" | awk '{print $1}')
   response_time=$(echo "$response" | awk '{print $2}')
@@ -52,9 +52,9 @@ while true; do
     ITEMS[$count]=$response_time
     echo "${ITEMS[@]}"
 
-    media=$(media_array "${ITEMS[@]}")
+    mean=$(calculate_array_mean "${ITEMS[@]}")
 
-    if [ "$media" -ge "$LIMIT" ]; then
+    if [ "$mean" -ge "$LIMIT" ]; then
       ssh "root@$PORT" "ssh -p 2222 root@localhost "/sbin/shutdown -r now" > /dev/null 2>&1" >/dev/null 2>&1
       echo "$timestamp" >>reset_times.csv
     fi
@@ -62,9 +62,9 @@ while true; do
     count=$((count + 1))
   fi
 
-  # Adiciona o timestamp e o tempo de resposta ao arquivo CSV
+  # Add the timestamp and response time to the CSV file
   echo "$timestamp;$response_time" >>response_times.csv
 
-  # Espera 1 segundos antes de fazer a próxima requisição
+  # Wait for 1 second before making the next request
   sleep 1
 done

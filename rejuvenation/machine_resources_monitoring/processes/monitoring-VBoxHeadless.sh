@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Script to continuously monitor the VirtualBox headless process (VBoxHeadless) and log resource usage to a CSV file
+# VBoxHeadless is responsible for running virtual machines without a graphical user interface
+
 #echo $pid
 while true; do
   :
