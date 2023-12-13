@@ -10,12 +10,12 @@ function headers() {
   echo "used;date_time" >logs/monitoring-disk.csv
   echo "used;cached;buffer;swap-free;date_time" >logs/monitoring-mem.csv
   echo "num_zombies;date_time" >logs/monitoring-zombies.csv
-  echo "offline_times;seconds;date_time" >logs/server_status.csv
+  echo "offline_count;seconds;date_time" >logs/server_status.csv
 }
 
 headers
 
-#stap -o logs/fragmentation.txt memory_fragmentation/fragmentation2b.stp &
+sudo stap -o logs/fragmentation.csv memory_fragmentation/fragmentation2b.stp &
 
 processes/monitoring-VBoxXPCOMIPCD.sh &
 processes/monitoring-VBoxHeadless.sh &

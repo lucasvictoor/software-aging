@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Script to monitor the cpu usage of the host machine and log it to a CSV file
+
 cpu=$(mpstat | grep all)
 usr=$(echo $cpu | awk '{print $3}')
 nice=$(echo $cpu | awk '{print $4}')

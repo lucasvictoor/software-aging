@@ -1,25 +1,29 @@
+// GLOBAL VARIABLES
 global alloc, fallback, fragmenting = 0
 
 global who
+
+// Probe to trace mm_page_alloc_extfrag events
 probe kernel.trace("mm_page_alloc_extfrag"){
-	who[execname(),pid(),pexecname(),ppid(),cmdline_arg(0)] <<<1
-	alloc = $alloc_order
-	fallback = $fallback_order
-	if(fallback<alloc){
-		fragmenting++
-	}	
+    who[execname(), pid(), pexecname(), ppid(), cmdline_arg(0)] <<< 1
+    alloc = $alloc_order
+    fallback = $fallback_order
+    // Check for fragmentation
+    if(fallback < alloc){
+        fragmenting++
+    }   
 }
 
-probe begin{
-
-	printf("\nProbing...\n")
-	printf("ocorrencia : %d\n", fragmenting)
-
+// Probe executed at the beginning
+probe begin {
+    printf("\nProbing...\n")
+    printf("occurrence: %d\n", fragmenting)
 }
 
-probe end{
-	printf("Processo,PPID,comando,ocorrencias\n")
-	foreach([process,pid,pexecname,ppid,cmdline_arg] in who)
-		printf("%s(%d),%s(%d),%s,%d\n", process,pid,pexecname,ppid,cmdline_arg,@count(who[process,pid,pexecname,ppid,cmdline_arg]));
+// Probe executed at the end
+probe end {
+    printf("Process, PPID, command, occurrence\n")
+    // Iterate through 'who' array and print process information
+    foreach([process, pid, pexecname, ppid, cmdline_arg] in who)
+        printf("%s(%d), %s(%d), %s, %d\n", process, pid, pexecname, ppid, cmdline_arg, @count(who[process, pid, pexecname, ppid, cmdline_arg]));
 }
-

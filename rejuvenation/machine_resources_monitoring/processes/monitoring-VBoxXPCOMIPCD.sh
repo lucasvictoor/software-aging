@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Script to continuously monitor the resource usage of the VirtualBox XPCOM process (VBoxXPCOMIPCD) and to log the relevant metrics to a CSV file
+# VBoxXPCOMIPCD is responsible for interprocess communication between guests and management applications on non-Windows hosts.
+
 while true; do
   :
 

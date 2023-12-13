@@ -1,6 +1,8 @@
 #!/bin/bash
 
-disk=$(df | grep /dev/nvme0n1p5)
+# Script to monitor the disk usage of the host machine and log used space and date time in a CSV file
+
+disk=$( df | grep '/$' )
 used=$(echo $disk | awk '{print $3}')
 
 echo "$used;$date_time" >>logs/monitoring-disk.csv

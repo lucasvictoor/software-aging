@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Script to monitor the status of the server by sending HTTP requests to http://localhost:8080
+# and logging downtime information to a CSV file
+
 started_at=0
 is_offline=0
 down_count=0

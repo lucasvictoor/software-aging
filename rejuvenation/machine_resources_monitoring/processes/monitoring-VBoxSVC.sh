@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Script to continuously monitor the VirtualBox service process (VBoxSVC) and log resource usage to a CSV file 
+# VBoxSVC keeps track of all virtual machines that are running on the host and is started automatically when the first guest boots
+
 #echo $pid
 while true; do
   :
