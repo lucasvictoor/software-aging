@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 KERNEL_VERSION=$(uname -r)
-DISTRO_ID=$(lsb_release -a | grep "Distributor ID" | awk '{print $3}')
-DISTRO_CODENAME=$(lsb_release -a | grep "Codename" | awk '{print $2}')
+
+source /etc/os-release
+DISTRO_ID="$ID"
+DISTRO_CODENAME="$VERSION_CODENAME"
 
 INSTALL_DEPENDENCIES_DEBIAN() {
   apt update
@@ -73,7 +75,7 @@ INSTALL_DEPENDENCIES_UBUNTU() {
 #   starts dependency checking and install dependencies requirements
 INSTALL_DEPENDENCIES() {
   case $DISTRO_ID in
-  "debian")
+  "Debian")
     reset
 
     INSTALL_DEPENDENCIES_DEBIAN
