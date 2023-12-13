@@ -75,7 +75,7 @@ INSTALL_DEPENDENCIES_UBUNTU() {
 #   starts dependency checking and install dependencies requirements
 INSTALL_DEPENDENCIES() {
   case $DISTRO_ID in
-  "Debian")
+  "debian")
     reset
 
     INSTALL_DEPENDENCIES_DEBIAN
@@ -83,7 +83,7 @@ INSTALL_DEPENDENCIES() {
     echo -e "\nInstallations Completed\n"
     return 0
     ;;
-  "Ubuntu")
+  "ubuntu")
     reset
 
     INSTALL_DEPENDENCIES_UBUNTU
