@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 KERNEL_VERSION=$(uname -r)
-DISTRO_ID=$(lsb_release -a | grep "Distributor ID" | awk '{print $3}')
-DISTRO_CODENAME=$(lsb_release -a | grep "Codename" | awk '{print $2}')
+
+source /etc/os-release
+DISTRO_ID="$ID"
+DISTRO_CODENAME="$VERSION_CODENAME"
 
 INSTALL_DEPENDENCIES_DEBIAN() {
   apt update
@@ -81,7 +83,7 @@ INSTALL_DEPENDENCIES() {
     echo -e "\nInstallations Completed\n"
     return 0
     ;;
-  "Ubuntu")
+  "ubuntu")
     reset
 
     INSTALL_DEPENDENCIES_UBUNTU
