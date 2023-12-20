@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source ../../machine_resources_monitoring/general_dependencies.sh
+
 INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
     reset
 
@@ -20,6 +22,8 @@ INSTALL_KVM_WITHOUT_LIBVIRT_DEPENDENCIES() {
 }
 
 read -rp "[1] - to download kvm with virtlib [2] - to download kvm without virtlib: " choice
+
+INSTALL_GENERAL_DEPENDENCIES
 
 if [[ "$choice" -eq 1 ]]; then
     INSTALL_KVM_LIBVIRT_DEPENDENCIES
