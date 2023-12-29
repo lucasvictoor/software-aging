@@ -22,14 +22,9 @@ CREATE_DISKS() {
   done
 }
 
-# start vm 
-VM_POWER_ON() {
-    # configs vm_power_on
-    local ram=2G                                        # ram que deseja usar
-    local caminho="/caminho/completo/do/debian.qcow2"   # caminho do disco com o so instalado
-    local formato_disco="qcow2"                         # formato do disco usado
-
-    qemu-system-x86_64 -m "$ram" -drive file="$caminho",format="$formato_disco" -enable-kvm
+NEW_DISK() {
+    local unallocated_disk_size=20G
+    qemu-img create -f qcow2 "$disco_kvm.qcow2" "$unallocated_disk_size"
 }
 
 CONFIGURE_NEW_VM() {
@@ -52,4 +47,14 @@ CONFIGURE_NEW_VM() {
         -device virtio-net-pci,netdev=net0                                        \
         -vga qxl                                                                  \
         -device AC97
+}
+
+# start vm 
+VM_POWER_ON() {
+    # configs vm_power_on
+    local ram=2G                                        # ram que deseja usar
+    local caminho="/caminho/completo/do/debian.qcow2"   # caminho do disco com o so instalado
+    local formato_disco="qcow2"                         # formato do disco usado
+
+    qemu-system-x86_64 -m "$ram" -drive file="$caminho",format="$formato_disco" -enable-kvm
 }
