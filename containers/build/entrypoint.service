@@ -1,0 +1,9 @@
+[Unit]
+Description=Checks the server status
+
+[Service]
+User=root
+ExecStart=/bin/bash /root/entrypoint.sh
+
+[Install]
+WantedBy=multi-user.target

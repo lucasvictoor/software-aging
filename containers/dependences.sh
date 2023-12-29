@@ -25,6 +25,7 @@ elif [ "$service" == "2" ]; then
 elif [ "$service" == "3" ]; then
   echo "Installing LXD/LXC..."
   apt-get install lxd lxc -y
+  lxd init --minimal
   echo "LXD/LXC installed!"
 else
   echo "Invalid option, exiting..."

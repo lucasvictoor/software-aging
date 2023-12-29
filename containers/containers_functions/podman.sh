@@ -20,7 +20,7 @@ function load_command() {
 }
 
 function start_command() {
-  if ! podman run -td "$image:$image_tag"; then
+  if ! podman run --name "container" -td -p "$mapping_port:$mapping_port" --init "$image:$image_tag"; then
     exit 1
   fi
 }
@@ -41,6 +41,12 @@ function remove_container_command() {
   if ! podman rm $(podman container ls -aq); then
     exit 1
   fi
+}
+
+function get_up_time() {
+    if ! podman exec -it "container" cat /root/log.txt; then
+      exit 1
+    fi
 }
 
 function is_image_available() {

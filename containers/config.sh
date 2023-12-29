@@ -6,6 +6,7 @@ remove_image=1                          #1 to remove image, 0 to keep it
 local="local"                           #local or remote
 image_tag="debian500mb"                 #debian500mb, debian1gb, debian2gb, debian3gb, debian4gb
 download_link="192.168.0.101"           #When local, the IP of the server. When remote, the link to download the image
+mapping_port="80"                     #Port to map the container
 
 #Not important, just to control the file name
 service="1"                   #1 for docker, 2 for podman, 3 for lxc

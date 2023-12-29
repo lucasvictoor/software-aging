@@ -2,6 +2,8 @@
 
 source config.sh
 
+container_name="mycontainer"
+
 function pull_command() {
   docker pull "$image:$image_tag"
 }
@@ -20,7 +22,7 @@ function load_command() {
 }
 
 function start_command() {
-  if ! docker run -td "$image:$image_tag"; then
+  if ! docker run --name $container_name -td -p "$mapping_port:$mapping_port" --init "$image:$image_tag"; then
     exit 1
   fi
 }
@@ -41,6 +43,12 @@ function remove_container_command() {
   if ! docker rm $(docker container ls -aq); then
     exit 1
   fi
+}
+
+function get_up_time() {
+    if ! docker exec -it "container" cat /root/log.txt; then
+      exit 1
+    fi
 }
 
 function is_image_available() {

@@ -71,6 +71,7 @@ while [[ $count -lt $max_runs ]]; do
 
   if [ -n "$image_available" ]; then
     instantiate_time=$(get_command_time start_command)
+    service_up_time=$(get_up_time)
     stop_time=$(get_command_time stop_command)
     container_removal_time=$(get_command_time remove_container_command)
     if [ "$remove_image" -eq 1 ]; then
@@ -79,7 +80,7 @@ while [[ $count -lt $max_runs ]]; do
       image_removal_time=0
     fi
     display_date=$(get_date_time)
-    echo "$download_time;$load_time;$instantiate_time;$stop_time;$container_removal_time;$image_removal_time;$image_size;$test_type;$service;$display_date" >>"logs/$log_file"
+    echo "$download_time;$load_time;$instantiate_time;$service_up_time;$stop_time;$container_removal_time;$image_removal_time;$image_size;$test_type;$service;$display_date" >>"logs/$log_file"
     count=$((count + 1))
     image_available=""
   fi
