@@ -1,34 +1,48 @@
 #!/usr/bin/env bash
-source ./virtualizer_functions/kvm_functions.sh
+# usage:
+#   $ bash workload_kvm.sh
 
-# PARAMETERS
-# $1= disks path
-# $2= quantity of disks
-# USAGE
-# ./workload.sh /disks/disk 50
+# ############################################# IMPORTS
+source ./virtualizer_functions/kvm_functions.sh
 
 readonly wait_time_after_attach=10
 readonly wait_time_after_detach=10
 
+# FUNCTION=WORKLOAD()
+# PARAMETERS:
+#   $1= disks path
+#   $2= quantity of disks
+# USAGE:
+#   ./workload.sh /disks/disk 50
 WORKLOAD() {
-  local count_disks=1
+  local attach_count_disks=1
+  local detach_count_disks=1
   local disk_path="setup/kvm/disks/disk"
   local max_disks=50
 
   while true; do
-    for port in {1..3}; do
-      ATTACH_DISK "${disk_path}${count_disks}.qcow2" "$port"
 
-      if [[ "$count_disks" -eq "$max_disks" ]]; then
-        count_disks=1
+    # attach loop
+    for _ in {1..3}; do
+      ATTACH_DISK "${disk_path}${attach_count_disks}.qcow2"
+
+      if [[ "$attach_count_disks" -eq "$max_disks" ]]; then
+        attach_count_disks=1
       else
-        ((count_disks++))
+        ((attach_count_disks++))
       fi
       sleep $wait_time_after_attach
     done
 
-    for port in {1..3}; do
-      DETACH_DISK "$port"
+    # detach loop
+    for _ in {1..3}; do
+      DETACH_DISK "${disk_path}${detach_count_disks}.qcow2"
+
+      if [[ "$detach_count_disks" -eq "$max_disks" ]]; then
+        detach_count_disks=1
+      else
+        ((detach_count_disks++))
+      fi
       sleep $wait_time_after_detach
 
     done

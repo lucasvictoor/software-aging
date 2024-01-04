@@ -72,19 +72,18 @@ START_VM() {
 
 ATTACH_DISK() {
   local disk_path="$1" # /home/thayson-pc/Área\ de\ trabalho/software-aging/disco_alocado.qcow2
-  local port="$2"
-  local device="sdb" # Nome do dispositivo de bloco dentro da VM
 
   # virsh attach-disk "$VM_NAME" "$disk_path" "$device" --targetbus sata --cache none --persistent
-  virsh attach-disk "$VM_NAME" "$disk_path" "$device" --live --config   # attach disks in executing
+  # virsh attach-disk "$VM_NAME" "$disk_path" sda --live --config   # attach disks in executing
+  virsh attach-disk "$VM_NAME" "$disk_path" sdb --type hdd --live --config
 
 }
 
 DETACH_DISK() {
-  local port="$1"
-  local device="sdb" # Nome do dispositivo de bloco a ser desanexado
+  local disk_path="$1"
 
-  virsh detach-disk "$VM_NAME" "$device"
+  # virsh detach-disk "$VM_NAME" sdb
+  virsh detach-disk "$VM_NAME" "$disk_path"
 }
 
 LIGAR_INTERFACE_GRAFICA() {
