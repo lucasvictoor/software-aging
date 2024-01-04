@@ -4,6 +4,14 @@
 
 readonly VM_NAME="debian12"
 
+ISO_FIND() {
+  if find / -name debian-12.4.0-amd64-netinst.iso | grep "debian-12.4.0-amd64-netinst.iso"; then
+    echo "O arquivo debian-12.4.0-amd64-netinst.iso foi encontrado." && return 0
+  else
+    echo "O arquivo debian-12.4.0-amd64-netinst.iso não foi encontrado." && exit 1
+  fi
+}
+
 TURN_VM_OFF() {
   virsh shutdown "$VM_NAME"
 }
@@ -29,26 +37,29 @@ SSH_REBOOT() {
 }
 
 CREATE_VM() {
+  ISO_FIND
+
   local memory=2048
   local vcpus=2
-  local disk_path="./debian12.qcow2"
-  local format="qcow2"
-  local iso_path="/home/thayson-pc/Downloads/debian-12.4.0-amd64-netinst.iso"
+  local disk_path="/var/lib/libvirt/images/$VM_NAME.qcow2"
+  local disk_vm_size=20
+
+  # local iso_path="/home/thayson-pc/Downloads/debian-12.4.0-amd64-netinst.iso"
+  local iso_path
+  iso_path=$( find / -name debian-12.4.0-amd64-netinst.iso -printf "%h/%f\n" )
 
   # import vm qcow2 and config vm with iso disk
   virt-install \
-    --name "$VM_NAME"                       \
-    --memory "$memory"                      \
-    --vcpus "$vcpus"                        \
-    --disk "$disk_path",format="$format"    \
-    --os-variant generic                    \
-    --cdrom "$iso_path"                     \
-    --virt-type qemu                        \
+    --name "$VM_NAME"                         \
+    --memory "$memory"                        \
+    --vcpus "$vcpus"                          \
+    --controller type=sata                    \
+    --disk "$disk_path" size="$disk_vm_size"  \
+    --os-variant generic                      \
+    --network bridge=virbr0                   \
+    --cdrom "$iso_path"                       \
+    --virt-type kvm                           \
     --vnc
-
-  # --network bridge=nome_da_ponte      \
-  # --graphics none                     \
-  # --console pty,target_type=serial
 }
 
 # usage:
@@ -56,7 +67,7 @@ CREATE_VM() {
 CREATE_DISKS() {
   local count=1
   local disks_quantity=$1      # amount of disks to be created
-  local allocated_disk_size=$2 # size in MB for each disk
+  local allocated_disk_size=$2 # size for disk
 
   mkdir -p ./disks_kvm
 
@@ -75,6 +86,7 @@ ATTACH_DISK() {
 
   # virsh attach-disk "$VM_NAME" "$disk_path" "$device" --targetbus sata --cache none --persistent
   # virsh attach-disk "$VM_NAME" "$disk_path" sda --live --config   # attach disks in executing
+
   virsh attach-disk "$VM_NAME" "$disk_path" sdb --type hdd --live --config
 
 }
