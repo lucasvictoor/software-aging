@@ -2,53 +2,45 @@
 
 source config.sh
 
-function pull_command() {
-  podman pull "$image:$image_tag"
-}
-
 function download_command() {
-  if [ "$local" == "local" ]; then
-    scp root@"$download_link":/root/docker/"$image_tag".tar image.tar
-  else
-    wget -O image.tar "$download_link"
-  fi
+  scp root@"$server_link":/root/$service/$image_name.tar image.tar
 }
 
 function load_command() {
   podman load -i image.tar
-  rm image.tar
+  rm -f image.tar
 }
 
 function start_command() {
-  if ! podman run --name "container" -td -p "$mapping_port:$mapping_port" --init "$image:$image_tag"; then
+  if ! podman run --name "$image_name" -td -p "$mapping_port:$mapping_port" --init "$image_name"; then
     exit 1
   fi
 }
 
 function stop_command() {
-  if ! podman container stop $(podman container ls -aq); then
+  if ! podman container stop "$image_name"; then
     exit 1
   fi
 }
 
 function remove_image_command() {
-  if ! podman rmi "$image:$image_tag"; then
+  if ! podman rmi "$image_name"; then
     exit 1
   fi
 }
 
 function remove_container_command() {
-  if ! podman rm $(podman container ls -aq); then
+  if ! podman rm "$image_name"; then
     exit 1
   fi
 }
 
 function get_up_time() {
-    if ! podman exec -it "container" cat /root/log.txt; then
+    if ! podman exec -it "$image_name" cat /root/log.txt; then
       exit 1
     fi
 }
 
 function is_image_available() {
-  podman image ls -a | grep "$image_tag" | awk '{print $3}'
+  podman image ls -a | grep "$image_name" | awk '{print $3}'
 }
