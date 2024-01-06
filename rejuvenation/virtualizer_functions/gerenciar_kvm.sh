@@ -4,14 +4,6 @@
 
 readonly VM_NAME="debian12"
 
-ISO_FIND() {
-  if find / -name debian-12.4.0-amd64-netinst.iso | grep "debian-12.4.0-amd64-netinst.iso"; then
-    echo "O arquivo debian-12.4.0-amd64-netinst.iso foi encontrado." && return 0
-  else
-    echo "O arquivo debian-12.4.0-amd64-netinst.iso não foi encontrado." && exit 1
-  fi
-}
-
 TURN_VM_OFF() {
   virsh shutdown "$VM_NAME"
 }
@@ -34,32 +26,6 @@ FORCED_REBOOT() {
 
 SSH_REBOOT() {
   ssh -p 2222 root@localhost "virsh reboot $VM_NAME"
-}
-
-CREATE_VM() {
-  ISO_FIND
-
-  local memory=2048
-  local vcpus=2
-  local disk_path="/var/lib/libvirt/images/$VM_NAME.qcow2"
-  local disk_vm_size=20
-
-  # local iso_path="/home/thayson-pc/Downloads/debian-12.4.0-amd64-netinst.iso"
-  local iso_path
-  iso_path=$( find / -name debian-12.4.0-amd64-netinst.iso -printf "%h/%f\n" )
-
-  # import vm qcow2 and config vm with iso disk
-  virt-install \
-    --name "$VM_NAME"                         \
-    --memory "$memory"                        \
-    --vcpus "$vcpus"                          \
-    --controller type=sata                    \
-    --disk "$disk_path" size="$disk_vm_size"  \
-    --os-variant generic                      \
-    --network bridge=virbr0                   \
-    --cdrom "$iso_path"                       \
-    --virt-type kvm                           \
-    --vnc
 }
 
 # usage:
