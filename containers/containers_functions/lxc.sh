@@ -1,9 +1,10 @@
 #!/bin/bash
 
-source config.sh
+DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$DIR/../config.sh"
 
 function download_command() {
-  scp root@$server_link:"/root/$service/$image_name.tar.gz" image.tar.gz > /dev/null
+  scp root@$server_link:"/root/$service/$image_name.tar.gz" image.tar.gz
 }
 
 function load_command() {
@@ -12,36 +13,25 @@ function load_command() {
 }
 
 function start_command() {
-  if ! lxc launch "$image_name" "$image_name"; then
-    exit 1
-  fi
-  if ! lxc config device add "$image_name" myport$mapping_port proxy listen=tcp:0.0.0.0:$mapping_port connect=tcp:127.0.0.1:$mapping_port; then
-    exit 1
-  fi
+  lxc launch "$image_name" "$image_name" || exit 1
+  lxc config device add "$image_name" myport$mapping_port proxy listen=tcp:0.0.0.0:$mapping_port connect=tcp:127.0.0.1:$mapping_port || exit 1
 }
 
 function stop_command() {
-  if ! lxc stop "$image_name"; then
-    exit 1
-  fi
+  lxc stop "$image_name" || exit 1
 }
 
 function remove_image_command() {
-  if ! lxc image delete "$image_name"; then
-    exit 1
-  fi
+  lxc image delete "$image_name" || exit 1
 }
 
 function remove_container_command() {
-  if ! lxc delete --force "$image_name"; then
-    exit 1
-  fi
+  lxc delete --force "$image_name" || exit 1
+
 }
 
 function get_up_time() {
-    if ! lxc exec "$image_name" -- cat /root/log.txt; then
-      exit 1
-    fi
+  lxc exec "$image_name" -- cat /root/log.txt || exit 1
 }
 
 function is_image_available() {

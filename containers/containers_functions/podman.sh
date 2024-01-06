@@ -1,44 +1,35 @@
 #!/bin/bash
 
-source config.sh
+DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$DIR/../config.sh"
 
 function download_command() {
   scp root@"$server_link":/root/$service/$image_name.tar image.tar
 }
 
 function load_command() {
-  podman load -i image.tar
+  podman load -q -i image.tar
   rm -f image.tar
 }
 
 function start_command() {
-  if ! podman run --name "$image_name" -td -p "$mapping_port:$mapping_port" --init "$image_name"; then
-    exit 1
-  fi
+  podman run --name "$image_name" -td -p "$mapping_port:$mapping_port" --init "$image_name" || exit 1
 }
 
 function stop_command() {
-  if ! podman container stop "$image_name"; then
-    exit 1
-  fi
+  podman container stop "$image_name" || exit 1
 }
 
 function remove_image_command() {
-  if ! podman rmi "$image_name"; then
-    exit 1
-  fi
+  podman rmi "$image_name" || exit 1
 }
 
 function remove_container_command() {
-  if ! podman rm "$image_name"; then
-    exit 1
-  fi
+  podman rm "$image_name" || exit 1
 }
 
 function get_up_time() {
-    if ! podman exec -it "$image_name" cat /root/log.txt; then
-      exit 1
-    fi
+  podman exec -it "$image_name" cat /root/log.txt || exit 1
 }
 
 function is_image_available() {

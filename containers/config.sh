@@ -1,11 +1,11 @@
 #!/bin/bash
 
-max_runs=1000 #Number of runs default 1000
-server_link="192.168.0.101" #The IP of the server
+max_runs=10 #Number of runs default 1000
+server_link="192.168.1.114" #The IP of the server
 
 #Test scenarios
-application="redis"         #redis, nginx, rabbitmq or postgres
-service="docker"            #docker, podman, lxc
+application="nginx"         #redis, nginx, rabbitmq or postgres
+service="docker"               #docker, podman, lxc
 image_size="500"            #500, 1024, 2048, 4096
 
 #Dont change this
@@ -24,6 +24,6 @@ fi
 
 mkdir -p "logs"
 
-log_file="$service-$image_name-$(date +%Y%m%d%H%M%S).csv"
+log_file="$service-$image_name.csv"
 
-echo "download;load;start;ap_start;stop;rm_container;rm_image;image_size;application;service;date_time" >"logs/$log_file"
+echo "download_image;load_container;start_container;start_application;stop_container;remove_container;remove_image;image_size;application;service;date_time" >"logs/$log_file"

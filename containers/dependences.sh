@@ -18,6 +18,7 @@ if [ "$service" == "1" ]; then
   curl -fsSL https://get.docker.com -o get-docker.sh
   sh get-docker.sh
   echo "Docker installed!"
+  rm -f get-docker.sh
 elif [ "$service" == "2" ]; then
   echo "Installing Podman..."
   apt-get install podman -y

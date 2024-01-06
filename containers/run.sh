@@ -1,7 +1,27 @@
 #!/bin/bash
 
 # Change the container functions to the one you want to test
-source containers_functions/docker.sh
+DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$DIR/containers_functions/docker.sh"
+
+# Define a trap function
+trap cleanup SIGINT
+trap "error $LINENO" ERR
+
+error() {
+  echo "Error: $1"
+  cleanup
+  exit 1
+}
+# The command to execute on script end or Ctrl + C
+cleanup() {
+  rm -f image.tar || echo "No file, skipping"
+  rm -f image.tar.gz || echo "No file, skipping"
+  stop_command || echo "No container, skipping"
+  remove_container_command || echo "No container, skipping"
+  remove_image_command || echo "No Image, skipping"
+  exit 0
+}
 
 function get_date_time() {
   local date_time
@@ -27,7 +47,7 @@ function get_command_time() {
   local start end total
   start=$(date +%s%N)
 
-  "$1" >/dev/null 2>&1
+  "$1" >/dev/null
 
   end=$(date +%s%N)
   total=$((end - start))
@@ -38,18 +58,13 @@ count=0
 
 while [[ $count -lt $max_runs ]]; do
   progress $count "$max_runs"
-  echo "$count" >current_interation.txt
-
   download_time=$(get_command_time download_command)
   load_time=$(get_command_time load_command)
   image_available=$(is_image_available)
 
   if [ -n "$image_available" ]; then
     instantiate_time=$(get_command_time start_command)
-
-    sleep 1
-
-    service_up_time=$(get_up_time)
+    service_up_time=$(get_up_time | tr -d '\r')
     stop_time=$(get_command_time stop_command)
     container_removal_time=$(get_command_time remove_container_command)
     image_removal_time=$(get_command_time remove_image_command)
