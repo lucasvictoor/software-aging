@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
-# Universidade Federal do Agreste de Pernambuco
-# Uname Research Group
+######################################## VBOX FUNCTIONS #######################################
+# Universidade Federal do Agreste de Pernambuco                                               #
+# Uname Research Group                                                                        #
+#                                                                                             #
+# ABOUT:                                                                                      #
+#   utilities for managing ( virtualbox ) virtual machines                                    #
+###############################################################################################
 
 # GLOBAL VARIABLES:
 VM_NAME="vmDebian"

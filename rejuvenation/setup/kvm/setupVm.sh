@@ -1,6 +1,8 @@
 #!/user/bin/env bash
 
+# ############################## IMPORTS #############################
 source ../../virtualizer_functions/gerenciar_kvm.sh
+# ####################################################################
 
 ISO_FIND() {
   if find / -name debian-12.4.0-amd64-netinst.iso | grep "debian-12.4.0-amd64-netinst.iso"; then

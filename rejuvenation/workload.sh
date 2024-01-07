@@ -1,21 +1,30 @@
-#!/bin/bash
-source ./vbox_functions.sh
+#!/usr/bin/env bash
+# usage:
+#   $ bash workload.sh
 
-# PARAMETERS
-# $1= disks path
-# $2= quantity of disks
-# USAGE
-# ./workload.sh /disks/disk 50
+######################################## VBOX - WORKLOAD ######################################
+# ABOUT:                                                                                      #
+#   used to simulate workload on ( virtualbox ) virtualization infrastructure                 #
+#                                                                                             #
+# WORKLOAD TYPE:                                                                              #
+#   DISKS                                                                                     #
+###############################################################################################
+
+# ####################### IMPORTS #######################
+source ./vbox_functions.sh
+# #######################################################
 
 readonly wait_time_after_attach=10
 readonly wait_time_after_detach=10
 
-WORKLOAD() {
-  local count_disks=1
-  local disk_path="setup/disks/disk"
+# FUNCTION=VBOX_WORKLOAD()
+VBOX_WORKLOAD() {
+  local count_disks=1                   # start disk count from 1 to n
+  local disk_path="setup/disks/disk"    # path where the disks are to start the workload
   local max_disks=50
 
   while true; do
+    # looping to attach
     for port in {1..3}; do
       ATTACH_DISK "${disk_path}${count_disks}.vhd" "$port"
 
@@ -27,6 +36,7 @@ WORKLOAD() {
       sleep $wait_time_after_attach
     done
 
+    # looping to detach
     for port in {1..3}; do
       DETACH_DISK "$port"
       sleep $wait_time_after_detach
@@ -35,4 +45,4 @@ WORKLOAD() {
   done
 }
 
-WORKLOAD
+VBOX_WORKLOAD

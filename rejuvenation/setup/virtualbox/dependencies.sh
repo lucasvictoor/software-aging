@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
+# ############################## IMPORTS #############################
 source ../../machine_resources_monitoring/general_dependencies.sh
+# ####################################################################
 
 #Download and install virtualbox if it's not installed
 VIRTUALBOX_INSTALL() {

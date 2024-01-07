@@ -1,67 +1,87 @@
 #!/usr/bin/env bash
+# usage:
+#   $ bash kvm_functions.sh
 
-###############################
-# REFERENCIAS
+######################################## KVM FUNCTIONS ########################################
+# Universidade Federal do Agreste de Pernambuco                                               #
+# Uname Research Group                                                                        #
+#                                                                                             #
+# ABOUT:                                                                                      #
+#   utilities for managing kvm virtual machines                                               #
+###############################################################################################
 
-# https://www.baeldung.com/linux/qemu-from-terminal
-###############################
-
-vm_disk="debian.qcow2"
+readonly VM_NAME="debian12"
 
 TURN_VM_OFF() {
-  poweroff=$(pgrep -f "qemu-system-x86_64 -hda $vm_disk")
-  kill -s SIGKILL "$poweroff"
+  virsh shutdown "$VM_NAME"
 }
 
-# configs create_disks
-disco_kvm="kvm_disk"
+DELETE_VM() {
+  virsh undefine "$VM_NAME"
+}
 
+GRACEFUL_REBOOT() {
+  virsh shutdown "$VM_NAME"
+  
+  until virsh start "$VM_NAME"; do
+    sleep 1
+    echo "Waiting for machine to shutdown"
+  done
+}
+
+FORCED_REBOOT() {
+  virsh reset "$VM_NAME"
+}
+
+SSH_REBOOT() {
+  ssh -p 2222 root@localhost "virsh reboot $VM_NAME"
+}
+
+# FUNCTION=CREATE_DISKS()
+# USAGE:
+#   CREATE_DISKS 3 1G
 CREATE_DISKS() {
   local count=1
-  local disks_quantity=$1        # amount of disks to be created
-  local unallocated_disk_size=$2 # size in MB for each disk
+  local disks_quantity=$1         # amount of disks to be created
+  local allocated_disk_size=$2    # size for disk
 
-  mkdir -p ../disks_kvm
+  mkdir -p ./disks_kvm
 
   while [[ "$count" -le "$disks_quantity" ]]; do
-    qemu-img create -f qcow2 "$disco_kvm$count.qcow2" "$unallocated_disk_size"MB
+    qemu-img create -f qcow2 -o preallocation=full ./disks_kvm/disk"$count".qcow2 "$allocated_disk_size"
     ((count++))
   done
 }
 
-NEW_DISK() {
-  local unallocated_disk_size=20G
-  qemu-img create -f qcow2 "$disco_kvm.qcow2" "$unallocated_disk_size"
+# FUNCTION=START_VM()
+# RUN FOR HELPER:
+#   virsh start --help
+START_VM() {
+  virsh start "$VM_NAME"
 }
 
-CONFIGURE_NEW_VM() {
-  # configs configure_new_vm
-  local ram_emulate=2G                                        # quantidade de ram a ser usada
-  local nucleos=2                                             # quantidade de cpus
-  local disco_emulado="myVirtualDisk.qcow2"                   # disco criado para instalar o so
-  local os_installer="algum_caminho_a_iso/iso_em_questao.iso" # caminho para a iso
-  local ip_dhcp4_with_netmask="192.168.0.0/24"                # configure de acordo com seu ip
-  local ip_dhcp4="192.168.0.9"                                # configure de acordo com seu ip
+# FUNCTION=ATTACH_DISK()
+# RUN FOR HELPER:
+#   virsh attach-disk --help
+ATTACH_DISK() {
+  local disk_path="$1"
 
-  qemu-system-x86_64 \
-    -enable-kvm \
-    -m "$ram_emulate" \
-    -smp "$nucleos" \
-    -hda "$disco_emulado" \
-    -boot d \
-    -cdrom "$os_installer" \
-    -netdev user,id=net0,net="$ip_dhcp4_with_netmask", dhcpstart="$ip_dhcp4" \
-    -device virtio-net-pci,netdev=net0 \
-    -vga qxl \
-    -device AC97
+  virsh attach-disk "$VM_NAME" "$disk_path" sdb --type hdd --live --config
+
 }
 
-# start vm
-VM_POWER_ON() {
-  # configs vm_power_on
-  local ram=2G                                      # ram que deseja usar
-  local caminho="/caminho/completo/do/debian.qcow2" # caminho do disco com o so instalado
-  local formato_disco="qcow2"                       # formato do disco usado
+# FUNCTION=DETACH_DISK()
+# RUN FOR HELPER:
+#   virsh detach-disk --help
+DETACH_DISK() {
+  local disk_path="$1"
 
-  qemu-system-x86_64 -m "$ram" -drive file="$caminho",format="$formato_disco" -enable-kvm
+  virsh detach-disk "$VM_NAME" "$disk_path"
+}
+
+# FUNCTION=TURN_ON_GRAPHICAL_INTERFACE()
+# RUN FOR HELPER:
+#   virt-viewer --help
+TURN_ON_GRAPHICAL_INTERFACE() {
+  virt-viewer --connect qemu:///session --wait "$VM_NAME"
 }

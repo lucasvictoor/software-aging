@@ -2,19 +2,28 @@
 # usage:
 #   $ bash workload_kvm.sh
 
-# ############################################# IMPORTS
+######################################## KVM - WORKLOAD #######################################
+# ABOUT:                                                                                      #
+#   used to simulate workload on ( kvm ) virtualization infrastructure                        #
+#                                                                                             #
+# WORKLOAD TYPE:                                                                              #
+#   DISKS                                                                                     #
+###############################################################################################
+
+# ####################### IMPORTS #######################
 source ./virtualizer_functions/kvm_functions.sh
+# #######################################################
 
 readonly wait_time_after_attach=10
 readonly wait_time_after_detach=10
 
-# FUNCTION=WORKLOAD()
+# FUNCTION=KVM_WORKLOAD()
 # PARAMETERS:
 #   $1= disks path
 #   $2= quantity of disks
 # USAGE:
 #   ./workload.sh /disks/disk 50
-WORKLOAD() {
+KVM_WORKLOAD() {
   local attach_count_disks=1
   local detach_count_disks=1
   local disk_path="setup/kvm/disks/disk"
@@ -49,4 +58,4 @@ WORKLOAD() {
   done
 }
 
-WORKLOAD
+KVM_WORKLOAD

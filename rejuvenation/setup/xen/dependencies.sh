@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
+# ############################## IMPORTS #############################
 source ../../machine_resources_monitoring/general_dependencies.sh
+# ####################################################################
 
 INSTALL_XEN_DEPENDENCIES() {
     apt install xen-system xen-tools lvm2

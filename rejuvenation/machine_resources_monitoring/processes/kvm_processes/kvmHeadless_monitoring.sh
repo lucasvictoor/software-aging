@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-mkdir -p logs
-echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/kvmHeadless_monitoring.csv
-
 while true; do
   # Obtém o ID da VM
   vm_id=$(pgrep -f qemu-system-x86)

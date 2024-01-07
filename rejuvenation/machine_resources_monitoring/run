@@ -1,25 +1,42 @@
 #!/bin/bash
+
+mkdir -p logs
+
+VIRTUALIZER_TYPE=$1
+
 cd "$(dirname "$0")" || exit
 
-function headers() {
-  mkdir -p logs
-  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/monitoring-VBoxSVC.csv
-  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/monitoring-VBoxHeadless.csv
-  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/monitoring-VBoxXPCOMIPCD.csv
-  echo "usr;nice;sys;iowait;soft;date_time" >logs/monitoring-cpu.csv
-  echo "used;date_time" >logs/monitoring-disk.csv
-  echo "used;cached;buffer;swap-free;date_time" >logs/monitoring-mem.csv
-  echo "num_zombies;date_time" >logs/monitoring-zombies.csv
-  echo "offline_count;seconds;date_time" >logs/server_status.csv
+function vbox_headers() {
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/vbox_logs/monitoring-VBoxSVC.csv
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/vbox_logs/monitoring-VBoxHeadless.csv
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/vbox_logs/monitoring-VBoxXPCOMIPCD.csv
+  echo "usr;nice;sys;iowait;soft;date_time" >logs/vbox_logs/monitoring-cpu.csv
+  echo "used;date_time" >logs/vbox_logs/monitoring-disk.csv
+  echo "used;cached;buffer;swap-free;date_time" >logs/vbox_logs/monitoring-mem.csv
+  echo "num_zombies;date_time" >logs/vbox_logs/monitoring-zombies.csv
+  echo "offline_count;seconds;date_time" >logs/vbox_logs/server_status.csv
 }
 
-headers
+if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
+  mkdir -p logs/vbox_logs
 
-sudo stap -o logs/fragmentation.csv memory_fragmentation/fragmentation2b.stp &
+  vbox_headers
 
-processes/monitoring-VBoxXPCOMIPCD.sh &
-processes/monitoring-VBoxHeadless.sh &
-processes/monitoring-VBoxSVC.sh &
+  stap -o logs/vbox_logs/fragmentation.csv memory_fragmentation/fragmentation2b.stp &
+
+  processes/monitoring-VBoxXPCOMIPCD.sh &
+  processes/monitoring-VBoxHeadless.sh &
+  processes/monitoring-VBoxSVC.sh &
+
+elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
+  mkdir -p logs/kvm_logs
+
+  stap -o logs/kvm_logs/fragmentation.csv memory_fragmentation/fragmentation2b.stp &
+
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/kvm_logs/kvmHeadless_monitoring.csv
+
+  process/kvm_processes/kvmHeadless_monitoring.sh &
+fi
 
 general_resources/server-down-count.sh &
 

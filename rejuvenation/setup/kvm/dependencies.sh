@@ -2,8 +2,9 @@
 # usage:
 #   $ bash dependencies.sh
 
-# ############################################################### IMPORTS
+# ############################## IMPORTS #############################
 source ../../machine_resources_monitoring/general_dependencies.sh
+# ####################################################################
 
 INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
     reset
