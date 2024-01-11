@@ -24,7 +24,7 @@ while true; do
     if [[ $CONFIRM == "s" ]]; then
         podman save -o "$IMAGE_NAME.tar" "$IMAGE_NAME"
         echo "Agora construa a próxima imagem"
-    elseS
+    else
         echo "Apagando a imagem ${IMAGE_NAME}..."
     fi
     podman rmi -f "$IMAGE_NAME"

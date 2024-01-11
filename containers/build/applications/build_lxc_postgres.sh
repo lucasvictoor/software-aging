@@ -1,7 +1,7 @@
 #!/bin/bash
 
 IMAGE_FILE="debian12-20231228"
-MAPPING_PORT="80"
+MAPPING_PORT="5432"
 
 # Loop para criar imagens com tamanhos específicos
 while true; do
@@ -12,24 +12,25 @@ while true; do
     read -p "Informe o tamanho (label) para a imagem: " SIZE_LABEL
 
     # Construir a imagem
-    IMAGE_NAME="nginx-${SIZE_LABEL}-temp"
-    REAL_NAME="nginx-${SIZE_LABEL}"
+    IMAGE_NAME="postgres-${SIZE_LABEL}-temp"
+    REAL_NAME="postgres-${SIZE_LABEL}"
     lxc image import "$IMAGE_FILE.tar" "$IMAGE_FILE.tar.root" --alias "$IMAGE_NAME"
     lxc launch "$IMAGE_NAME" "$IMAGE_NAME"
 
     #Instalação do nginx
-    lxc exec "$IMAGE_NAME" -- bash -c "sudo apt-get update && sudo apt-get install -y nginx procps"
-    lxc exec "$IMAGE_NAME" -- bash -c " systemctl stop nginx"
-    lxc exec "$IMAGE_NAME" -- bash -c " systemctl disable nginx"
+    lxc exec "$IMAGE_NAME" -- bash -c "apt-get update && apt-get install -y postgresql-15 procps"
+    lxc exec "$IMAGE_NAME" -- bash -c "mkdir -p /usr/local/pgsql/data && chown -R postgres:postgres /usr/local/pgsql/data && chmod 700 /usr/local/pgsql/data"
+    lxc exec "$IMAGE_NAME" -- bash -c "systemctl stop postgresql"
+    lxc exec "$IMAGE_NAME" -- bash -c "systemctl disable postgresql"
 
     #Configuração do entrypoint
     lxc file push "entrypoint.sh" "$IMAGE_NAME/root/"
     lxc file push "entrypoint.service" "$IMAGE_NAME/etc/systemd/system/"
     lxc exec "$IMAGE_NAME" -- bash -c "chmod a+wrx /root/entrypoint.sh"
     lxc exec "$IMAGE_NAME" -- bash -c "systemctl enable /etc/systemd/system/entrypoint.service"
-    lxc exec "$IMAGE_NAME" -- bash -c "systemctl daemon-reload"
-    lxc exec "$IMAGE_NAME" -- bash -c "systemctl start entrypoint.service"
-    lxc exec "$IMAGE_NAME" -- bash -c "systemctl status entrypoint.service"
+    #lxc exec "$IMAGE_NAME" -- bash -c "systemctl daemon-reload"
+    #lxc exec "$IMAGE_NAME" -- bash -c "systemctl start entrypoint.service"
+    #lxc exec "$IMAGE_NAME" -- bash -c "systemctl status entrypoint.service"
 
     #Geração do arquivo aleatório
     lxc exec "$IMAGE_NAME" -- bash -c "dd if=/dev/urandom of=/root/random_file.bin bs=1M count=${SIZE}"

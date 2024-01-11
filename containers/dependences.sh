@@ -1,6 +1,6 @@
 #!/bin/bash
 
-apt install sysstat wget -y
+apt install curl -y
 
 echo -e "Are you using a local server? If so, type the remote server ip address, else, press enter:"
 read -r ip

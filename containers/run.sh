@@ -32,7 +32,7 @@ function get_date_time() {
 function progress {
   clear
   local _done _left _fill _empty _progress current
-  current=$(($1 + 1))
+  current=$(($1))
   _progress=$((($current * 10000 / $2) / 100))
   _done=$(($_progress * 6 / 10))
   _left=$((60 - $_done))
