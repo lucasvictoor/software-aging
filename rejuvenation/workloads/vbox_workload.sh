@@ -11,7 +11,7 @@
 ###############################################################################################
 
 # ####################### IMPORTS #######################
-source ./vbox_functions.sh
+source ./virtualizer_functions/vbox_functions.sh
 # #######################################################
 
 readonly wait_time_after_attach=10
@@ -20,7 +20,7 @@ readonly wait_time_after_detach=10
 # FUNCTION=VBOX_WORKLOAD()
 VBOX_WORKLOAD() {
   local count_disks=1                   # start disk count from 1 to n
-  local disk_path="setup/disks/disk"    # path where the disks are to start the workload
+  local disk_path="setup/virtualbox/disks/disk"    # path where the disks are to start the workload
   local max_disks=50
 
   while true; do

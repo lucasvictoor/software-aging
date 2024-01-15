@@ -19,10 +19,9 @@ while true; do
     vsz=$(echo "$data" | awk '{print $12}')
     swap=$(cat /proc/"$pidHead"/status | grep Swap | awk '{print $2}')
 
-    echo "$cpu;$mem;$vmrss;$vsz;$thread;$swap;$date_time" >> logs/monitoring-VBoxHeadless.csv
+    echo "$cpu;$mem;$vmrss;$vsz;$thread;$swap;$date_time" >> logs/vbox_monitoring-VBoxHeadless.csv
   else
     sleep 1
-    echo "0;0;0;0;0;0;0" >> logs/monitoring-VBoxHeadless.csv
+    echo "0;0;0;0;0;0;0" >> logs/vbox_monitoring-VBoxHeadless.csv
   fi
 done
-

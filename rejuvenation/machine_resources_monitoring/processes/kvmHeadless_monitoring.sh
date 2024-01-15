@@ -15,9 +15,9 @@ while true; do
     vsz=$(echo "$data" | awk '{print $12}')
     swap=$(cat /proc/"$vm_id"/status | grep Swap | awk '{print $2}')
 
-    echo "$cpu;$mem;$vmrss;$vsz;$thread;$swap;$DATETIME" >>logs/kvmHeadless_monitoring.csv
+    echo "$cpu;$mem;$vmrss;$vsz;$thread;$swap;$DATETIME" >>logs/kvm_Headless_monitoring.csv
   else
     sleep 1
-    echo "0;0;0;0;0;0;0" >>logs/kvmHeadless_monitoring.csv
+    echo "0;0;0;0;0;0;0" >>logs/kvm_Headless_monitoring.csv
   fi
 done

@@ -16,7 +16,7 @@ readonly VIRTUALIZER_TYPE="vbox"
 
 if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
   # shellcheck disable=SC1091
-  source ./vbox_functions.sh
+  source ./virtualizer_functions/vbox_functions.sh
 
 elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
   # shellcheck disable=SC1091
@@ -105,9 +105,9 @@ function REBOOT_VM() {
 START_VM
 
 if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
-  ./workload.sh &
+  bash workloads/vbox_workload.sh &
 elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
-  bash workloads/kvm_workload.sh
+  bash workloads/kvm_workload.sh &
 fi
 
 machine_resources_monitoring/run "$VIRTUALIZER_TYPE" &

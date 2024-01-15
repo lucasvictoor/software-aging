@@ -1,25 +1,11 @@
 #!/usr/bin/env bash
 
-# ############## IMPORTS ###############
-source ../../vbox_functions.sh
+# ############## IMPORTS ############### 
+# shellcheck disable=SC1091
+source ../../virtualizer_functions/vbox_functions.sh
+source ../../utils/messages.sh
+source ../../utils/errors.sh
 # ######################################
-
-# UTILS
-#   ERROR HANDLE
-ERROR_HANDLING() {
-    local error=$1
-    local status=$2
-
-    [[ $status -eq 0 ]] || {
-        echo -e "\nERROR: $error\n"
-        exit 1
-    }
-}
-
-# ERROR MESSAGES
-readonly poweroff="error when turning off the virtual machine, it may already be turned off!"
-readonly unregister="unregistering and deleting files from vmDebian"
-readonly import_modify="Importing vmDebian.ova and modifying vmDebian ports and network"
 
 # CHECK_DEBIAN_IMAGE
 # DESCRIPTION:
@@ -48,13 +34,13 @@ CREATE_VIRTUAL_MACHINE() {
   CHECK_DEBIAN_IMAGE
 
   TURN_VM_OFF
-  ERROR_HANDLING "$poweroff" 0
+  ERROR_HANDLING "$POWEROFF" 0
 
   DELETE_VM
-  ERROR_HANDLING "$unregister" 0
+  ERROR_HANDLING "$UNREGISTER" 0
 
   CREATE_VM
-  ERROR_HANDLING "$import_modify" 0
+  ERROR_HANDLING "$IMPORT_MODIFY" 0
   cd .. || exit
 }
 
@@ -74,7 +60,7 @@ DISKS_MANAGEMENT() {
   REMOVE_DISKS
   ERROR_HANDLING "ERROR REMOVING DISKS" 0
 
-  CREATE_DISKS 50 1024
+  CREATE_DISKS 50 10
   ERROR_HANDLING "ERROR CREATING DISKS" 0
 }
 

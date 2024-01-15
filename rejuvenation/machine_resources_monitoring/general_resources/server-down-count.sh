@@ -20,7 +20,7 @@ while true; do
       end_time=$(date +%s)
       offline_time=$((end_time - started_at))
       ((down_count++))
-      echo "$down_count;$offline_time;$date_time" >>logs/server_status.csv
+      echo "$down_count;$offline_time;$date_time" >>logs/machineHost_server_status.csv
       is_offline=0
     fi
   else
