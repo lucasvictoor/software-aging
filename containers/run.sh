@@ -64,7 +64,12 @@ while [[ $count -lt $max_runs ]]; do
 
   if [ -n "$image_available" ]; then
     instantiate_time=$(get_command_time start_command)
-    service_up_time=$(get_up_time | tr -d '\r')
+    service_up_time=""
+
+    until [ -n "$service_up_time" ]; do
+        service_up_time=$(get_up_time | tr -d '\r')
+    done
+
     stop_time=$(get_command_time stop_command)
     container_removal_time=$(get_command_time remove_container_command)
     image_removal_time=$(get_command_time remove_image_command)
@@ -75,5 +80,7 @@ while [[ $count -lt $max_runs ]]; do
     image_available=""
   fi
 done
+
+progress $count "$max_runs"
 
 printf "\n"
