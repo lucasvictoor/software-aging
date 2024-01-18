@@ -13,24 +13,16 @@
 readonly VM_NAME="debian12"
 
 TURN_VM_OFF() {
-  # saida=$?
-
-  # while "$saida" -eq 0; do
-  #   virsh shutdown "$VM_NAME"
-  #   saida=$?
-  # done
-
   virsh shutdown "$VM_NAME"
   saida=$?
 
   while [ "$saida" -eq 0 ]; do
-    printf "%s\n" "esperando para desligar"
+    printf "%s\n" "esperando a vm desligar..."
     virsh shutdown "$VM_NAME"
     saida=$?
 
     sleep 3
   done
-
 }
 
 DELETE_VM() {
@@ -101,11 +93,7 @@ ATTACH_DISK() {
   local disk_path="$1"
   local target="$2"
 
-  # virsh attach-disk "$VM_NAME" "$disk_path" "$target" --subdriver qcow2 --live --config
-  # virsh attach-disk debian12 setup/kvm/disks_kvm/disk5.qcow2 sdb --type disk --live --config
-
   virsh attach-disk "$VM_NAME" --source "$disk_path" --target "$target" --persistent --config
-
 }
 
 # FUNCTION=DETACH_DISK()

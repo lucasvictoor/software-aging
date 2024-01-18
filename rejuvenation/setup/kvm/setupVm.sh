@@ -32,10 +32,8 @@ ISO_FIND() {
 CREATE_VM() {
   local memory=2048
   local vcpus=2
-
   local disk_vm_size=20
 
-  # local iso_path="/home/thayson-pc/Downloads/debian-12.4.0-amd64-netinst.iso"
   local iso_path
   iso_path=$(find / -name "$ISO_NAME" -printf "%h/%f\n")
 
@@ -125,9 +123,7 @@ START_VIRTUAL_MACHINE_IN_BACKGROUND() {
 #   curl:
 #       Checks whether the request to the server was successful
 TEST_VIRTUAL_MACHINE_SERVER() {
-  local url="192.168.122.114:80"
-  # http://localhost:8080
-
+  local url="http://localhost:8080"
   sleep 10
 
   if ! curl "$url"; then

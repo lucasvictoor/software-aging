@@ -25,7 +25,7 @@ INSTALL_KVM_WITHOUT_LIBVIRT_DEPENDENCIES() {
     reset
 
     if ! which qemu-system-x86_64 > /dev/null; then
-        apt install qemu-system
+        apt install qemu-system -y
     fi
 }
 
