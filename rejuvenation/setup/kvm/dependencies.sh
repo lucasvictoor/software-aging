@@ -2,8 +2,9 @@
 # usage:
 #   $ bash dependencies.sh
 
-# ############################################################### IMPORTS
+# ############################## IMPORTS #############################
 source ../../machine_resources_monitoring/general_dependencies.sh
+# ####################################################################
 
 INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
     reset
@@ -24,7 +25,7 @@ INSTALL_KVM_WITHOUT_LIBVIRT_DEPENDENCIES() {
     reset
 
     if ! which qemu-system-x86_64 > /dev/null; then
-        apt install qemu-system
+        apt install qemu-system -y
     fi
 }
 

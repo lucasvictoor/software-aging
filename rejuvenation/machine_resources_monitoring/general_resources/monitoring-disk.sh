@@ -5,4 +5,4 @@
 disk=$( df | grep '/$' )
 used=$(echo $disk | awk '{print $3}')
 
-echo "$used;$date_time" >>logs/monitoring-disk.csv
+echo "$used;$date_time" >>logs/machine_monitoring-disk.csv
