@@ -1,5 +1,5 @@
-/logs
-/disks
 /machine_resources_monitoring/logs
-/setup/disks
+/setup/kvm/disks_kvm
+/setup/virtualbox/disks
+/setup/virtualbox/vmDebian.ova
 .idea
