@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # usage ./remoteServiceResponse.sh 192.168.0.109 8080 6
 # Define the server ADDRESS

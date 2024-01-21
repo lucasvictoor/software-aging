@@ -74,12 +74,13 @@ CREATE_VIRTUAL_MACHINE() {
   # definindo dominio
   if [[ $(virsh define "$XML_FILE_PATH") ]]; then
     printf "%s\n" "importacao das configs da vm feita!"
+    START_VM
+    printf "esperando 60 segundos para a vm ligar completamente\n" && sleep 60
   else
-    printf "%s\n" "erro ao obter xml configs da vm"
+    printf "%s\n" "erro ao obter xml configs da vm, ela nao sera ligada, pois nao tera dominio no libvirt"
+    virsh list --all
     exit 1
   fi
-
-  cd .. || exit
 }
 
 # DISKS_MANAGEMENT
@@ -107,7 +108,7 @@ DISKS_MANAGEMENT() {
 #     START_VM:
 #         Starts vm in headless mode
 START_VIRTUAL_MACHINE_IN_BACKGROUND() {
-  read -r -p "Do you want to connect the vm? ( y | n ) - Default=n: \n" choice
+  read -r -p "Do you want to connect the vm? ( y | n ) - Default=n: " choice
 
   if [[ "$choice" == "y" ]]; then
     START_VM
@@ -123,18 +124,39 @@ START_VIRTUAL_MACHINE_IN_BACKGROUND() {
 #   curl:
 #       Checks whether the request to the server was successful
 TEST_VIRTUAL_MACHINE_SERVER() {
-  local url="http://localhost:8080"
-  sleep 10
+  printf "esperando server nginx ligar\n"
 
-  if ! curl "$url"; then
+  if ! curl "$GET_HOST_IP":8080; then
     echo -e "ERROR: error when trying to start debian12 nginx server\n"
   fi
 }
 
+NETWORK_REDIRECT_SETTINGS() {
+  cd ./libvirt-hook-qemu || exit 1
+
+  printf "\n%s\n" "-----------------removendo configs de rede-----------------"
+  make uninstall
+  printf "\n%s\n" "-----------------------------------------------------------"
+
+  printf "\n%s\n" "-----------------adicionando configs de rede-----------------"
+  make install
+  printf "\n%s\n" "-------------------------------------------------------------"
+
+  systemctl restart libvirtd
+
+  sleep 3
+
+  cd ..
+
+  bash ./create_network_redirect_settings.sh "$VM_NAME"
+}
+
 SETUP_VM() {
   DISKS_MANAGEMENT
-  CREATE_VIRTUAL_MACHINE
-  START_VM
+  CREATE_VIRTUAL_MACHINE  # verificar se maquina liga completamente antes de passar para baixo
+
+  NETWORK_REDIRECT_SETTINGS
+
   TEST_VIRTUAL_MACHINE_SERVER
 }
 
