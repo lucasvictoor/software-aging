@@ -41,7 +41,7 @@ elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
   processes/kvmHeadless_monitoring.sh &
 fi
 
-general_resources/server-down-count.sh &
+general_resources/server-down-count.sh "$VIRTUALIZER_TYPE" &
 
 while true; do
   :

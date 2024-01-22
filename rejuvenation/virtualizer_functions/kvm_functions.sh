@@ -10,7 +10,10 @@
 #   utilities for managing kvm virtual machines                                               #
 ###############################################################################################
 
-readonly VM_NAME="debian12"
+VM_NAME="debian12"
+
+GET_GUEST_IP="$(virsh net-dhcp-leases default | awk '/ipv4/ {gsub("/24", "", $5); print $5}')"
+GET_HOST_IP="$(hostname -I | awk '{print $1}')"
 
 TURN_VM_OFF() {
   virsh shutdown "$VM_NAME"
@@ -43,7 +46,7 @@ FORCED_REBOOT() {
 }
 
 SSH_REBOOT() {
-  ssh -p 2222 root@localhost "virsh reboot $VM_NAME"
+  ssh -p 2222 root@"$GET_HOST_IP" "virsh reboot $VM_NAME"
 }
 
 # FUNCTION=CREATE_DISKS()
@@ -58,7 +61,7 @@ CREATE_DISKS() {
 
   while [[ "$count" -le "$disks_quantity" ]]; do
     qemu-img create -f qcow2 -o preallocation=full ./disks_kvm/disk"$count".qcow2 "$allocated_disk_size"M
-    sleep 1
+    sleep 0.2
     ((count++))
   done
 }
@@ -70,7 +73,7 @@ REMOVE_DISKS() {
   for disk_file in $disk_files; do
     echo -e "\n--->> Deletando o disco: $disk_file \n"
     rm -f "$disk_file"
-    sleep 1
+    sleep 0.2
     if [[ -f $disk_file ]]; then
       echo -e "Erro: Falha ao deletar o disco: $disk_file \n"
     else

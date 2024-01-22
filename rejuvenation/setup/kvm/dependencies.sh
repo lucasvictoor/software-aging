@@ -14,7 +14,7 @@ INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
     fi
 
     # add root user group on libvirt
-    adduser "$USER" libvirt
+    sudo adduser "$USER" libvirt
 
     # Make Network active and auto-restart
     virsh net-start default

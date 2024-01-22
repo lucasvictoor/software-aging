@@ -22,10 +22,10 @@ KVM_WORKLOAD() {
     local detach_count_disks=1
     # local disk_path="/home/thayson-pc/Área de trabalho/software-aging/rejuvenation/setup/kvm/disks_kvm/disk"
     local disk
-    disk=$(find / -name disk1.qcow2)
+    disk="$(find / -name disk1.qcow2)"
 
     local disk_path
-    disk_path=$(dirname "$disk")/disk
+    disk_path="$(dirname "$disk")/disk"
 
     local max_disks=50
     local identificador=("b" "c" "d")
