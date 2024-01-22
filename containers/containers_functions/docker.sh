@@ -29,7 +29,7 @@ function remove_container_command() {
 }
 
 function get_up_time() {
-  docker exec -it "$image_name" cat /root/log.txt || exit 1
+  docker exec -it "$image_name" sh -c "test -e /root/log.txt && cat /root/log.txt"
 }
 
 function is_image_available() {
