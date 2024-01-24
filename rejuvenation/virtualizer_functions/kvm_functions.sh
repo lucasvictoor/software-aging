@@ -15,6 +15,10 @@ VM_NAME="debian12"
 GET_GUEST_IP="$(virsh net-dhcp-leases default | awk '/ipv4/ {gsub("/24", "", $5); print $5}')"
 GET_HOST_IP="$(hostname -I | awk '{print $1}')"
 
+RESTART_LIBVIRTD_SERVICE() {
+  systemctl restart libvirtd
+}
+
 TURN_VM_OFF() {
   virsh shutdown "$VM_NAME"
   saida=$?
@@ -33,6 +37,8 @@ DELETE_VM() {
 }
 
 GRACEFUL_REBOOT() {
+  RESTART_LIBVIRTD_SERVICE
+  
   virsh shutdown "$VM_NAME"
 
   until virsh start "$VM_NAME"; do
@@ -42,10 +48,14 @@ GRACEFUL_REBOOT() {
 }
 
 FORCED_REBOOT() {
+  RESTART_LIBVIRTD_SERVICE
+
   virsh reset "$VM_NAME"
 }
 
 SSH_REBOOT() {
+  ssh -p 2222 root@"$GET_HOST_IP" "systemctl restart libvirtd"
+
   ssh -p 2222 root@"$GET_HOST_IP" "virsh reboot $VM_NAME"
 }
 
