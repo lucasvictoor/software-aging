@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-############################ IMPORTS
+############################ IMPORTS #############################
 source ../../virtualizer_functions/xen_functions.sh
+##################################################################
 
 # UTILS
 #   ERROR HANDLE

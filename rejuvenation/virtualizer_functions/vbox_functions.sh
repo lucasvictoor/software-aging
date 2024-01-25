@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
-# Universidade Federal do Agreste de Pernambuco
-# Uname Research Group
+######################################## VBOX FUNCTIONS #######################################
+# Universidade Federal do Agreste de Pernambuco                                               #
+# Uname Research Group                                                                        #
+#                                                                                             #
+# ABOUT:                                                                                      #
+#   utilities for managing ( virtualbox ) virtual machines                                    #
+###############################################################################################
 
 # GLOBAL VARIABLES:
 VM_NAME="vmDebian"
@@ -94,10 +99,10 @@ CREATE_DISKS() {
   local disks_quantity=$1 # amount of disks to be created
   local disk_size=$2      # size in MB for each disk
 
-  mkdir -p ../disks
+  mkdir -p disks
 
   while [[ "$count" -le "$disks_quantity" ]]; do
-    vboxmanage createmedium disk --filename ../disks/disk$count.vhd --size "$disk_size" --format VHD --variant Fixed
+    vboxmanage createmedium disk --filename ./disks/disk$count.vhd --size "$disk_size" --format VHD --variant Fixed
     ((count++))
   done
 }

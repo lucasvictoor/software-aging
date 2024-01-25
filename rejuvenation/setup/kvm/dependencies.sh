@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
+# usage:
+#   $ bash dependencies.sh
 
+# ############################## IMPORTS #############################
 source ../../machine_resources_monitoring/general_dependencies.sh
+# ####################################################################
 
 INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
     reset
@@ -10,18 +14,23 @@ INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
     fi
 
     # add root user group on libvirt
-    adduser "$USER" libvirt
+    sudo adduser "$USER" libvirt
+
+    # Make Network active and auto-restart
+    virsh net-start default
+    virsh net-autostart default
 }
 
 INSTALL_KVM_WITHOUT_LIBVIRT_DEPENDENCIES() {
     reset
 
     if ! which qemu-system-x86_64 > /dev/null; then
-        apt install qemu-system
+        apt install qemu-system -y
     fi
 }
 
-read -rp "[1] - to download kvm with virtlib [2] - to download kvm without virtlib: " choice
+printf "[1] - to download kvm with virtlib\n[2] - to download kvm without virtlib\n"
+read -rp "choice: " choice
 
 INSTALL_GENERAL_DEPENDENCIES
 
@@ -31,5 +40,5 @@ if [[ "$choice" -eq 1 ]]; then
 elif [[ "$choice" -eq 2 ]]; then
     INSTALL_KVM_WITHOUT_LIBVIRT_DEPENDENCIES
 else
-    echo "enter valid value!"
+    echo "enter valid value!" && exit 1
 fi

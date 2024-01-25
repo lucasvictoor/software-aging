@@ -1,67 +1,117 @@
 #!/usr/bin/env bash
+# usage:
+#   $ bash kvm_functions.sh
 
-###############################
-# REFERENCIAS
+######################################## KVM FUNCTIONS ########################################
+# Universidade Federal do Agreste de Pernambuco                                               #
+# Uname Research Group                                                                        #
+#                                                                                             #
+# ABOUT:                                                                                      #
+#   utilities for managing kvm virtual machines                                               #
+###############################################################################################
 
-# https://www.baeldung.com/linux/qemu-from-terminal
-###############################
+VM_NAME="debian12"
 
-vm_disk="debian.qcow2"
+GET_GUEST_IP="$(virsh net-dhcp-leases default | awk '/ipv4/ {gsub("/24", "", $5); print $5}')"
+GET_HOST_IP="$(hostname -I | awk '{print $1}')"
 
 TURN_VM_OFF() {
-  poweroff=$(pgrep -f "qemu-system-x86_64 -hda $vm_disk")
-  kill -s SIGKILL "$poweroff"
+  virsh shutdown "$VM_NAME"
+  saida=$?
+
+  while [ "$saida" -eq 0 ]; do
+    printf "%s\n" "esperando a vm desligar..."
+    virsh shutdown "$VM_NAME"
+    saida=$?
+
+    sleep 3
+  done
 }
 
-# configs create_disks
-disco_kvm="kvm_disk"
+DELETE_VM() {
+  virsh undefine "$VM_NAME"
+}
 
+GRACEFUL_REBOOT() {
+  virsh shutdown "$VM_NAME"
+
+  until virsh start "$VM_NAME"; do
+    sleep 1
+    echo "Waiting for machine to shutdown"
+  done
+}
+
+FORCED_REBOOT() {
+  virsh reset "$VM_NAME"
+}
+
+SSH_REBOOT() {
+  ssh -p 2222 root@"$GET_HOST_IP" "virsh reboot $VM_NAME"
+}
+
+# FUNCTION=CREATE_DISKS()
+# USAGE:
+#   CREATE_DISKS 3 1G
 CREATE_DISKS() {
   local count=1
-  local disks_quantity=$1        # amount of disks to be created
-  local unallocated_disk_size=$2 # size in MB for each disk
+  local disks_quantity=$1      # amount of disks to be created
+  local allocated_disk_size=$2 # size for disk
 
-  mkdir -p ../disks_kvm
+  mkdir -p ./disks_kvm
 
   while [[ "$count" -le "$disks_quantity" ]]; do
-    qemu-img create -f qcow2 "$disco_kvm$count.qcow2" "$unallocated_disk_size"MB
+    qemu-img create -f qcow2 -o preallocation=full ./disks_kvm/disk"$count".qcow2 "$allocated_disk_size"M
+    sleep 0.2
     ((count++))
   done
 }
 
-NEW_DISK() {
-  local unallocated_disk_size=20G
-  qemu-img create -f qcow2 "$disco_kvm.qcow2" "$unallocated_disk_size"
+REMOVE_DISKS() {
+  local disk_files
+  disk_files=$(ls ./disks_kvm/*.qcow2) # lista todos os discos no diretório 'disks'
+
+  for disk_file in $disk_files; do
+    echo -e "\n--->> Deletando o disco: $disk_file \n"
+    rm -f "$disk_file"
+    sleep 0.2
+    if [[ -f $disk_file ]]; then
+      echo -e "Erro: Falha ao deletar o disco: $disk_file \n"
+    else
+      echo "Disco $disk_file deletado com sucesso"
+    fi
+  done
 }
 
-CONFIGURE_NEW_VM() {
-  # configs configure_new_vm
-  local ram_emulate=2G                                        # quantidade de ram a ser usada
-  local nucleos=2                                             # quantidade de cpus
-  local disco_emulado="myVirtualDisk.qcow2"                   # disco criado para instalar o so
-  local os_installer="algum_caminho_a_iso/iso_em_questao.iso" # caminho para a iso
-  local ip_dhcp4_with_netmask="192.168.0.0/24"                # configure de acordo com seu ip
-  local ip_dhcp4="192.168.0.9"                                # configure de acordo com seu ip
-
-  qemu-system-x86_64 \
-    -enable-kvm \
-    -m "$ram_emulate" \
-    -smp "$nucleos" \
-    -hda "$disco_emulado" \
-    -boot d \
-    -cdrom "$os_installer" \
-    -netdev user,id=net0,net="$ip_dhcp4_with_netmask", dhcpstart="$ip_dhcp4" \
-    -device virtio-net-pci,netdev=net0 \
-    -vga qxl \
-    -device AC97
+# FUNCTION=START_VM()
+# RUN FOR HELPER:
+#   virsh start --help
+START_VM() {
+  virsh start "$VM_NAME"
 }
 
-# start vm
-VM_POWER_ON() {
-  # configs vm_power_on
-  local ram=2G                                      # ram que deseja usar
-  local caminho="/caminho/completo/do/debian.qcow2" # caminho do disco com o so instalado
-  local formato_disco="qcow2"                       # formato do disco usado
+# FUNCTION=ATTACH_DISK()
+# RUN FOR HELPER:
+#   virsh attach-disk --help
+ATTACH_DISK() {
+  local disk_path="$1"
+  local target="$2"
 
-  qemu-system-x86_64 -m "$ram" -drive file="$caminho",format="$formato_disco" -enable-kvm
+  virsh attach-disk "$VM_NAME" --source "$disk_path" --target "$target" --persistent --config
+}
+
+# FUNCTION=DETACH_DISK()
+# RUN FOR HELPER:
+#   virsh detach-disk --help
+DETACH_DISK() {
+  local target="$1"
+
+  # virsh detach-disk "$VM_NAME" "$disk_path"
+  virsh detach-disk "$VM_NAME" "$target" --persistent --config
+}
+
+# FUNCTION=TURN_ON_GRAPHICAL_INTERFACE()
+# RUN FOR HELPER:
+#   virt-viewer --help
+TURN_ON_GRAPHICAL_INTERFACE() {
+  virt-viewer --connect qemu:///session --wait "$VM_NAME"
 }

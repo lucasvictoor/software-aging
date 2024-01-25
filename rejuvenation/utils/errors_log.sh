@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# ERRORS TESTS AND LOGS FOR ERRORS
+
 source ./vbox_functions.sh
 
 LOG_ERRORS() {

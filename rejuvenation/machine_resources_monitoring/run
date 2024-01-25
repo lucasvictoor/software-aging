@@ -1,27 +1,47 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+mkdir -p ./machine_resources_monitoring/logs
+
+VIRTUALIZER_TYPE=$1
+
 cd "$(dirname "$0")" || exit
 
-function headers() {
-  mkdir -p logs
-  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/monitoring-VBoxSVC.csv
-  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/monitoring-VBoxHeadless.csv
-  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/monitoring-VBoxXPCOMIPCD.csv
-  echo "usr;nice;sys;iowait;soft;date_time" >logs/monitoring-cpu.csv
-  echo "used;date_time" >logs/monitoring-disk.csv
-  echo "used;cached;buffer;swap-free;date_time" >logs/monitoring-mem.csv
-  echo "num_zombies;date_time" >logs/monitoring-zombies.csv
-  echo "offline_count;seconds;date_time" >logs/server_status.csv
+MACHINE_HEADERS() {
+  echo "usr;nice;sys;iowait;soft;date_time" >logs/machine_monitoring-cpu.csv
+  echo "used;date_time" >logs/machine_monitoring-disk.csv
+  echo "used;cached;buffer;swap-free;date_time" >logs/machine_monitoring-mem.csv
+  echo "num_zombies;date_time" >logs/machine_monitoring-zombies.csv
+  echo "offline_count;seconds;date_time" >logs/machineHost_server_status.csv
 }
 
-headers
+VBOX_HEADERS() {
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/vbox_monitoring-VBoxSVC.csv
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/vbox_monitoring-VBoxHeadless.csv
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/vbox_monitoring-VBoxXPCOMIPCD.csv
+}
 
-sudo stap -o logs/fragmentation.csv memory_fragmentation/fragmentation2b.stp &
+KVM_HEADERS() {
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/kvm_Headless_monitoring.csv
+}
 
-processes/monitoring-VBoxXPCOMIPCD.sh &
-processes/monitoring-VBoxHeadless.sh &
-processes/monitoring-VBoxSVC.sh &
+MACHINE_HEADERS
 
-general_resources/server-down-count.sh &
+stap -o logs/fragmentation.csv memory_fragmentation/fragmentation2b.stp &
+
+if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
+  VBOX_HEADERS
+
+  processes/monitoring-VBoxXPCOMIPCD.sh &
+  processes/monitoring-VBoxHeadless.sh &
+  processes/monitoring-VBoxSVC.sh &
+
+elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
+  KVM_HEADERS
+
+  processes/kvmHeadless_monitoring.sh &
+fi
+
+general_resources/server-down-count.sh "$VIRTUALIZER_TYPE" &
 
 while true; do
   :

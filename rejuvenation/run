@@ -1,6 +1,27 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# usage:
+#   $ bash ./run [PARAMETERS]
 
-source ./vbox_functions.sh
+######################################## RUNNING TESTS ########################################
+# Universidade Federal do Agreste de Pernambuco                                               #
+# Uname Research Group                                                                        #
+#                                                                                             #
+# ABOUT:                                                                                      #
+#   start testing and monitoring virtualizers based on available types                        #
+###############################################################################################
+
+# STATIC USAGE:
+#   vbox | kvm | xen
+readonly VIRTUALIZER_TYPE="kvm"
+
+if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
+  # shellcheck disable=SC1091
+  source ./virtualizer_functions/vbox_functions.sh
+
+elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
+  # shellcheck disable=SC1091
+  source ./virtualizer_functions/kvm_functions.sh
+fi
 
 #Time method
 minutes=0
@@ -83,8 +104,13 @@ function REBOOT_VM() {
 
 START_VM
 
-./workload.sh &
-machine_resources_monitoring/run &
+if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
+  bash workloads/vbox_workload.sh &
+elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
+  bash workloads/kvm_workload.sh &
+fi
+
+machine_resources_monitoring/run "$VIRTUALIZER_TYPE" &
 
 while true; do
   :

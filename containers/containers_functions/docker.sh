@@ -1,48 +1,37 @@
 #!/bin/bash
 
-source config.sh
-
-function pull_command() {
-  docker pull "$image:$image_tag"
-}
+DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$DIR/../config.sh"
 
 function download_command() {
-  if [ "$local" == "local" ]; then
-    scp root@"$download_link":/root/docker/"$image_tag".tar image.tar
-  else
-    wget -O image.tar "$download_link"
-  fi
+  scp root@"$server_link":/root/$service/$image_name.tar image.tar
 }
 
 function load_command() {
-  docker load -i image.tar
-  rm image.tar
+  docker load -q -i image.tar
+  rm -f image.tar
 }
 
 function start_command() {
-  if ! docker run -td "$image:$image_tag"; then
-    exit 1
-  fi
+  docker run --name "$image_name" -td -p "$mapping_port:$mapping_port" --init "localhost/$image_name" || exit 1
 }
 
 function stop_command() {
-  if ! docker container stop $(docker container ls -aq); then
-    exit 1
-  fi
+  docker container stop "$image_name" || exit 1
 }
 
 function remove_image_command() {
-  if ! docker rmi "$image:$image_tag"; then
-    exit 1
-  fi
+  docker rmi "localhost/$image_name" || exit 1
 }
 
 function remove_container_command() {
-  if ! docker rm $(docker container ls -aq); then
-    exit 1
-  fi
+  docker rm "$image_name" || exit 1
+}
+
+function get_up_time() {
+  docker exec -it "$image_name" sh -c "test -e /root/log.txt && cat /root/log.txt"
 }
 
 function is_image_available() {
-  docker image ls -a | grep "$image_tag" | awk '{print $3}'
+  docker image ls -a | grep "$image_name" | awk '{print $3}'
 }
