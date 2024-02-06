@@ -22,6 +22,7 @@ VBOX_HEADERS() {
 
 KVM_HEADERS() {
   echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/kvm_Headless_monitoring.csv
+  echo "cpu;mem;vsz;rss;threads;swap;date_time" >logs/kvm_libvirtd_service_monitoring.csv
 }
 
 MACHINE_HEADERS
@@ -39,6 +40,7 @@ elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
   KVM_HEADERS
 
   processes/kvmHeadless_monitoring.sh &
+  processes/kvm_libvirtd_monitoring.sh &
 fi
 
 general_resources/server-down-count.sh "$VIRTUALIZER_TYPE" &
