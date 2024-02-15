@@ -68,7 +68,7 @@ CREATE_DISKS() {
 
 REMOVE_DISKS() {
   local disk_files
-  disk_files=$(ls ./disks_kvm/*.qcow2) # lista todos os discos no diretório 'disks'
+  disk_files=$(ls ./disks_kvm/*.qcow2) # lists all disks in the 'disks' directory
 
   for disk_file in $disk_files; do
     echo -e "\n--->> Deletando o disco: $disk_file \n"

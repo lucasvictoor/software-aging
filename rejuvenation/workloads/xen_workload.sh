@@ -1,6 +1,16 @@
 #!/bin/bash
 
+######################################## KVM - WORKLOAD #######################################
+# ABOUT:                                                                                      #
+#   used to simulate workload on (xen) virtualization infrastructure                        #
+#                                                                                             #
+# WORKLOAD TYPE:                                                                              #
+#   DISKS                                                                                     #
+###############################################################################################
+
+# ####################### IMPORTS #######################
 source ./virtualizer_functions/xen_functions.sh
+# #######################################################
 
 # PARAMETERS
 # $1 = volume group

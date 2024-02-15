@@ -4,7 +4,7 @@
 
 ######################################## VBOX - WORKLOAD ######################################
 # ABOUT:                                                                                      #
-#   used to simulate workload on ( virtualbox ) virtualization infrastructure                 #
+#   used to simulate workload on (virtualbox) virtualization infrastructure                 #
 #                                                                                             #
 # WORKLOAD TYPE:                                                                              #
 #   DISKS                                                                                     #

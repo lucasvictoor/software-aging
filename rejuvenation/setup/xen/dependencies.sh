@@ -42,22 +42,27 @@ CONFIGURE_GRUB_FOR_XEN(){
   update-grub
 }
 
+
 # FUNCTION=NETWORK_CONFIG()
 # DESCRIPTION:
-# Creates a bridge interface (xenbr0), connects it to the default network interface of the host and finally it brings up 
+# Creates a bridge interface (xenbr0), connects it to the default network interface of the host by altering the '/etc/network/interfaces' file
 NETWORK_CONFIG(){
- default_interface=$(ip -o -4 route show to default | awk '{print $5}' | grep -v '^lo$' | grep -v '^vir' | head -n 1)
+  local config_file="/etc/network/interfaces"
+  local default_interface=$(ip -o -4 route show to default | awk '{print $5}' | grep -v '^lo$' | grep -v '^vir' | head -n 1)
 
     if [ -z "$default_interface" ]; then
-        echo "Error: No suitable network interface found."
+        echo "Error: No proper network interface found."
         exit 1
     fi
 
-    echo "Using network interface: $default_interface"
+    echo "Updating network configuration file..."
+    cat > "$config_file" <<EOL
+auto xenbr0
+iface xenbr0 inet dhcp
+    bridge_ports "$default_interface"
+EOL
 
-    brctl addbr xenbr0
-    brctl addif xenbr0 "$default_interface"
-    ip link set xenbr0 up
+  service networking restart
 }
 
 # FUNCTION=STORAGE_SETUP()
@@ -79,10 +84,15 @@ STORAGE_SETUP() {
     vgcreate vg0 /dev/sda4
 }
 
-SYSTEM_UPDATE
-INSTALL_XEN_DEPENDENCIES
-INSTALL_UTILS
-CONFIGURE_GRUB_FOR_XEN
-NETWORK_CONFIG
-STORAGE_SETUP
-reboot now
+DEPENDENCIES_MAIN(){
+  SYSTEM_UPDATE
+  INSTALL_XEN_DEPENDENCIES
+  INSTALL_UTILS
+  CONFIGURE_GRUB_FOR_XEN
+  NETWORK_CONFIG
+  STORAGE_SETUP
+  reboot now
+}
+
+DEPENDENCIES_MAIN
+

@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+######################################## KVM FUNCTIONS ########################################
+# Universidade Federal do Agreste de Pernambuco                                               #
+# Uname Research Group                                                                        #
+#                                                                                             #
+# ABOUT:                                                                                      #
+#   utilities for managing xen virtual machines                                               #
+###############################################################################################
+
 VM_NAME="xenDebian"
 HOST_IP="$(hostname -I | awk '{print $1}')"
 
@@ -18,8 +26,8 @@ DELETE_VM() {
   TURN_VM_OFF 
   xl destroy "$VM_NAME"
   xl delete "$VM_NAME"
-  rm -rf /etc/xen/"$VM_NAME".cfg  # Remove configuration file
-  rm -rf /var/lib/xen/images/"$VM_NAME".img  # Remove disk image file
+  # rm -rf /etc/xen/"$VM_NAME".cfg  # Remove configuration file
+  # rm -rf /var/lib/xen/images/"$VM_NAME".img  # Remove disk image file
 }
 
 # FUNCTION=GRACEFUL_REBOOT()
@@ -56,38 +64,44 @@ START_VM(){
 # DESCRIPTION:
 # 
 # hostname - VM name;
+#
 # ip - IP address for communication with the VM;
 # netmask - network mask, leave the default 255.255.255.0;
 # gateway - IP address of the router;
+#
 # vcpus - number of processor cores used by the vm;
 # memory - amount of Ram memory that the VM will use;
 # size - size of the system image that will be created;
 # dist - linux distribution to be installed on the VM, in this case Debian 12 (bookworm);
 # password - password to access the virtualized system;
 # arch - system architecture;
+# bridge - in order for the VM to communicate via the network with the host machine,
+# it must have its own network interface connected as a bridge.
 CREATE_VM() {
     local memory=512M
     local size=5G
-    local ip #10.0.0.129
-    local netmask="255.255.255.0"
-    local gateway #10.0.0.1
+    # local ip 
+    # local netmask="255.255.255.0"
+    # local gateway 
     local vcpus=2
     local password=12345678
 
-    ip=$(ip route get 8.8.8.8 | awk '/src/ {print $7}')
-    gateway=$(ip route | awk '/default via/ {print $3}')
+    # ip=$(ip route get 8.8.8.8 | awk '/src/ {print $7}')
+    # gateway=$(ip route | awk '/default via/ {print $3}')
 
     xen-create-image \
     --hostname "$VM_NAME" \
-    --ip "$ip" \
-    --netmask "$netmask" --gateway "$gateway" \
+    --bridge=xenbr0 \
+    --dhcp \
     --vcpus "$vcpus" \
     --memory "$memory" \
     --size "$size" \
     --dist bookworm \
     --password "$password" \
     --arch=amd64 \
-    --dir=/etc/xen/
+    --lvm=vg0 # creates two new logical volumes within vg0 for the xenDebian vm: one for the root disk and another for the swap device
+    # --ip "$ip" \
+    # --netmask "$netmask" --gateway "$gateway" \
 }
 
 # FUNCTION=CREATE_DISKS()
