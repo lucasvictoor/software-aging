@@ -14,6 +14,8 @@ readonly NETWORK_INTERFACE="virbr0"
 readonly REDIRECT_SSH_PORT="2222, 22"       # origem, destino
 readonly REDIRECT_NGINX_PORT="8080, 80"     # origem, destino
 
+mv ./libvirt-hook-qemu/hooks.json ./libvirt-hook-qemu/hooks.json.backup
+
 echo -e "{
     // Note: comments in two styles are supported
     /* Note: comments in two styles are supported */
@@ -49,6 +51,6 @@ echo -e "{
             ]
         }
     }
-}" > /etc/libvirt/hooks/hooks.json
+}" > ./libvirt-hook-qemu/hooks.json     # /etc/libvirt/hooks/hooks.json
 
 [[ $? -eq 0 ]] && printf "\nredirecionamento de rede configurado\n" || printf "\nerro em configuracoes de redirecionamento de rede\n"

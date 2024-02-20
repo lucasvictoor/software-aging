@@ -10,7 +10,7 @@ readonly ISO_NAME="debian-12.4.0-amd64-netinst.iso"
 
 ISO_FIND() {
   if find / -name "$ISO_NAME" | grep "$ISO_NAME"; then
-    echo "O arquivo $ISO_NAME foi encontrado." && return 0
+    echo "O arquivo $ISO_NAME foi encontrado."
   else
     echo "O arquivo $ISO_NAME não foi encontrado."
     printf "%s\n" "deseja continuar?"
@@ -43,14 +43,14 @@ CREATE_VM() {
     --memory "$memory" \
     --vcpus "$vcpus" \
     --controller type=sata \
-    --disk "$DISK_PATH" size="$disk_vm_size" \
+    --disk "$DISK_PATH",size="$disk_vm_size" \
     --os-variant generic \
     --network bridge=virbr0 \
     --cdrom "$iso_path" \
     --virt-type kvm \
     --vnc
 
-  vish dumpxml "$VM_NAME" >"$XML_FILE_PATH"
+  virsh dumpxml "$VM_NAME" >"$XML_FILE_PATH"
 }
 
 # CREATE_VIRTUAL_MACHINE
@@ -79,6 +79,7 @@ CREATE_VIRTUAL_MACHINE() {
   else
     printf "%s\n" "erro ao obter xml configs da vm, ela nao sera ligada, pois nao tera dominio no libvirt"
     virsh list --all
+
     exit 1
   fi
 }
@@ -132,6 +133,8 @@ TEST_VIRTUAL_MACHINE_SERVER() {
 }
 
 NETWORK_REDIRECT_SETTINGS() {
+  bash ./create_network_redirect_settings.sh "$VM_NAME"
+
   cd ./libvirt-hook-qemu || exit 1
 
   printf "\n%s\n" "-----------------removendo configs de rede-----------------"
@@ -147,8 +150,6 @@ NETWORK_REDIRECT_SETTINGS() {
   sleep 3
 
   cd ..
-
-  bash ./create_network_redirect_settings.sh "$VM_NAME"
 }
 
 SETUP_VM() {

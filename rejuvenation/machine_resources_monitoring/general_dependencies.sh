@@ -7,7 +7,7 @@ DISTRO_ID="$ID"
 DISTRO_CODENAME="$VERSION_CODENAME"
 
 INSTALL_GENERAL_DEPENDENCIES() {
-  apt update
+  reset; apt update
 
   #Download general packages including systemtap
   apt install linux-headers-"$KERNEL_VERSION" linux-image-"$KERNEL_VERSION"-dbg gnupg wget curl sysstat systemtap -y || {
