@@ -17,6 +17,8 @@ INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
     read -rp "escolha: " escolha
 
     if ! which qemu-system-x86_64 >/dev/null; then
+
+        # host com interface
         if [[ "$escolha" -eq 1 ]]; then
             # apt install qemu-system libvirt-daemon-system -y
             apt install --no-install-recommends qemu-system -y
@@ -30,6 +32,7 @@ INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
 
             flag=1
 
+        # host sem interface
         elif [[ "$escolha" -eq 2 ]]; then
             # apt install --no-install-recommends qemu-system qemu-utils libvirt-daemon-system -y
             apt install --no-install-recommends qemu-system -y
