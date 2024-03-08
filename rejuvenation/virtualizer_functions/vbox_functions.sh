@@ -71,7 +71,7 @@ CREATE_VM() {
   local host_ip
   host_ip=$(hostname -I | awk '{print $1}')
 
-  vboxmanage import vmDebian.ova
+  vboxmanage import "$VM_NAME".ova
   vboxmanage modifyvm vmDebian --natpf1 "porta 8080,tcp,$host_ip,8080,,80"
 }
 
