@@ -8,8 +8,12 @@
 #   utilities for managing ( virtualbox ) virtual machines                                    #
 ###############################################################################################
 
+# ip_host_utils
+# source ../utils/networks/get_host_ip.sh
+
 # GLOBAL VARIABLES:
-VM_NAME="vmDebian"
+# VM_NAME="vmDebian"
+VM_NAME="debian125"
 
 # FUNCTION=TURN_VM_OFF()
 # DESCRIPTION:
