@@ -85,7 +85,7 @@ INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
 
     if [[ "$criado" == "s" && "$flag" -eq 1 ]]; then
         virt-viewer --connect qemu:///session --wait "$VM_NAME"
-        virsh dumpxml "debian12" > "$XML_FILE_PATH"
+        virsh dumpxml "$VM_NAME" > "$XML_FILE_PATH"
 
     else
         printf "%s" "crie a vm: $VM_NAME; pode executar novamente a dependencies.sh para configuracao inicial da debian12\n"

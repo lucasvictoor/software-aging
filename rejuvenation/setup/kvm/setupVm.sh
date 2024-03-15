@@ -6,7 +6,7 @@ source ../../virtualizer_functions/kvm_functions.sh
 
 readonly DISK_PATH="/var/lib/libvirt/images/$VM_NAME.qcow2"
 readonly XML_FILE_PATH="/var/lib/libvirt/images/$VM_NAME.xml"
-readonly ISO_NAME="debian-12.4.0-amd64-netinst.iso"
+readonly ISO_NAME="debian-12.5.0-amd64-netinst.iso"
 
 ISO_FIND() {
   if find / -name "$ISO_NAME" | grep "$ISO_NAME"; then

@@ -10,7 +10,7 @@
 #   utilities for managing kvm virtual machines                                               #
 ###############################################################################################
 
-VM_NAME="debian12"
+VM_NAME="debian125"
 
 GET_GUEST_IP="$(virsh net-dhcp-leases default | grep "debian" | awk '/ipv4/ {gsub("/24", "", $5); print $5}')"
 GET_HOST_IP="$(hostname -I | awk '{print $1}')"
