@@ -4,6 +4,7 @@
 
 # ############################## IMPORTS #############################
 source ../../machine_resources_monitoring/general_dependencies.sh
+source ../../virtualizer_functions/kvm_functions.sh
 # ####################################################################
 
 readonly XML_FILE_PATH="/var/lib/libvirt/images/$VM_NAME.xml"
@@ -60,7 +61,7 @@ INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
                 apt remove "$pacote" -y
 
             else
-                echo "Pacote $pacote não encontrado. Ignorando."
+                printf "%s" "Pacote $pacote não encontrado. Ignorando."
             fi
         }
 
@@ -83,11 +84,11 @@ INSTALL_KVM_LIBVIRT_DEPENDENCIES() {
     read -rp "ja criou a vm com sua maquina com interface: debian12? [s/n]: " criado
 
     if [[ "$criado" == "s" && "$flag" -eq 1 ]]; then
-        virt-viewer --connect qemu:///session --wait debian12
+        virt-viewer --connect qemu:///session --wait "$VM_NAME"
         virsh dumpxml "debian12" > "$XML_FILE_PATH"
 
     else
-        printf "crie a vm: debian12; pode executar novamente a dependencies.sh para configuracao inicial da debian12\n"
+        printf "%s" "crie a vm: $VM_NAME; pode executar novamente a dependencies.sh para configuracao inicial da debian12\n"
     fi
 }
 

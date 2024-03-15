@@ -10,9 +10,9 @@ readonly ISO_NAME="debian-12.4.0-amd64-netinst.iso"
 
 ISO_FIND() {
   if find / -name "$ISO_NAME" | grep "$ISO_NAME"; then
-    echo "O arquivo $ISO_NAME foi encontrado."
+    printf "%s" "O arquivo $ISO_NAME foi encontrado."
   else
-    echo "O arquivo $ISO_NAME não foi encontrado."
+    printf "%s" "O arquivo $ISO_NAME não foi encontrado."
     printf "%s\n" "deseja continuar?"
     read -rp "[s/n]: " escolha
     [[ "$escolha" == "s" ]] || exit 1
@@ -128,7 +128,7 @@ TEST_VIRTUAL_MACHINE_SERVER() {
   printf "esperando server nginx ligar\n"
 
   if ! curl "$GET_HOST_IP":8080; then
-    echo -e "ERROR: error when trying to start debian12 nginx server\n"
+    printf "%s\n" "ERROR: error when trying to start debian12 nginx server"
   fi
 }
 
