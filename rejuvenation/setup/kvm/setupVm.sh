@@ -128,7 +128,7 @@ TEST_VIRTUAL_MACHINE_SERVER() {
   printf "esperando server nginx ligar\n"
 
   if ! curl "$GET_HOST_IP":8080; then
-    printf "%s\n" "ERROR: error when trying to start debian12 nginx server"
+    printf "%s\n" "ERROR: error when trying to start $VM_NAME nginx server"
   fi
 }
 

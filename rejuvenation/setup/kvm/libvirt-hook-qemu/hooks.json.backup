@@ -3,13 +3,13 @@
     /* Note: comments in two styles are supported */
 
     // Name of the guest VM
-    "debian12": {
+    "debian125": {
 
         // Name of the network interface the guest is using
         "interface": "virbr0",
 
         // IP address of the guest
-        "private_ip": "192.168.122.27",
+        "private_ip": "",
 
         // Remote IP which gets permission to access the ports
         // This line can be omitted, allowing any remote IP access
