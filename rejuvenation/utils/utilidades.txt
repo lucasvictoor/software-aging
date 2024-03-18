@@ -1,0 +1,2 @@
+arquivos que se repetem muito em toda estrutura de diretorios
+utilidades como tratamento de erros, mensagens e aplicacoes isoladas que são úteis para todo o sistema

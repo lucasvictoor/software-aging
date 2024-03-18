@@ -6,13 +6,13 @@ source ../../virtualizer_functions/kvm_functions.sh
 
 readonly DISK_PATH="/var/lib/libvirt/images/$VM_NAME.qcow2"
 readonly XML_FILE_PATH="/var/lib/libvirt/images/$VM_NAME.xml"
-readonly ISO_NAME="debian-12.4.0-amd64-netinst.iso"
+readonly ISO_NAME="debian-12.5.0-amd64-netinst.iso"
 
 ISO_FIND() {
   if find / -name "$ISO_NAME" | grep "$ISO_NAME"; then
-    echo "O arquivo $ISO_NAME foi encontrado." && return 0
+    printf "%s" "O arquivo $ISO_NAME foi encontrado."
   else
-    echo "O arquivo $ISO_NAME não foi encontrado."
+    printf "%s" "O arquivo $ISO_NAME não foi encontrado."
     printf "%s\n" "deseja continuar?"
     read -rp "[s/n]: " escolha
     [[ "$escolha" == "s" ]] || exit 1
@@ -43,14 +43,14 @@ CREATE_VM() {
     --memory "$memory" \
     --vcpus "$vcpus" \
     --controller type=sata \
-    --disk "$DISK_PATH" size="$disk_vm_size" \
+    --disk "$DISK_PATH",size="$disk_vm_size" \
     --os-variant generic \
     --network bridge=virbr0 \
     --cdrom "$iso_path" \
     --virt-type kvm \
     --vnc
 
-  vish dumpxml "$VM_NAME" >"$XML_FILE_PATH"
+  virsh dumpxml "$VM_NAME" >"$XML_FILE_PATH"
 }
 
 # CREATE_VIRTUAL_MACHINE
@@ -79,6 +79,7 @@ CREATE_VIRTUAL_MACHINE() {
   else
     printf "%s\n" "erro ao obter xml configs da vm, ela nao sera ligada, pois nao tera dominio no libvirt"
     virsh list --all
+
     exit 1
   fi
 }
@@ -127,11 +128,13 @@ TEST_VIRTUAL_MACHINE_SERVER() {
   printf "esperando server nginx ligar\n"
 
   if ! curl "$GET_HOST_IP":8080; then
-    echo -e "ERROR: error when trying to start debian12 nginx server\n"
+    printf "%s\n" "ERROR: error when trying to start $VM_NAME nginx server"
   fi
 }
 
 NETWORK_REDIRECT_SETTINGS() {
+  bash ./create_network_redirect_settings.sh "$VM_NAME"
+
   cd ./libvirt-hook-qemu || exit 1
 
   printf "\n%s\n" "-----------------removendo configs de rede-----------------"
@@ -147,8 +150,6 @@ NETWORK_REDIRECT_SETTINGS() {
   sleep 3
 
   cd ..
-
-  bash ./create_network_redirect_settings.sh "$VM_NAME"
 }
 
 SETUP_VM() {

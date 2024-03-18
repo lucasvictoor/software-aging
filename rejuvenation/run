@@ -12,7 +12,7 @@
 
 # STATIC USAGE:
 #   vbox | kvm | xen
-readonly VIRTUALIZER_TYPE="kvm"
+readonly VIRTUALIZER_TYPE="vbox"
 
 if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
   # shellcheck disable=SC1091

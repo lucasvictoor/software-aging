@@ -1,5 +1,8 @@
 /machine_resources_monitoring/logs
+/machine_resources_monitoring/reset_times.csv
+/machine_resources_monitoring/response_times.csv
 /setup/virtualbox/disks
 /setup/virtualbox/vmDebian.ova
+/setup/virtualbox/debian125.ova
 /setup/kvm/disks_kvm
 .idea

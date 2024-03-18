@@ -9,7 +9,7 @@
         "interface": "virbr0",
 
         // IP address of the guest
-        "private_ip": "192.168.122.39",
+        "private_ip": "",
 
         // Remote IP which gets permission to access the ports
         // This line can be omitted, allowing any remote IP access
