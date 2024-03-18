@@ -8,8 +8,12 @@
 #   utilities for managing ( virtualbox ) virtual machines                                    #
 ###############################################################################################
 
+# ip_host_utils
+# source ../utils/networks/get_host_ip.sh
+
 # GLOBAL VARIABLES:
-VM_NAME="vmDebian"
+# VM_NAME="vmDebian"
+VM_NAME="debian125"
 
 # FUNCTION=TURN_VM_OFF()
 # DESCRIPTION:
@@ -71,7 +75,7 @@ CREATE_VM() {
   local host_ip
   host_ip=$(hostname -I | awk '{print $1}')
 
-  vboxmanage import vmDebian.ova
+  vboxmanage import "$VM_NAME".ova
   vboxmanage modifyvm vmDebian --natpf1 "porta 8080,tcp,$host_ip,8080,,80"
 }
 

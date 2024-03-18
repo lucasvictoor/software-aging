@@ -86,7 +86,9 @@ START_VIRTUAL_MACHINE_IN_BACKGROUND() {
 #       Checks whether the request to the server was successful
 TEST_VIRTUAL_MACHINE_SERVER() {
   sleep 10
-  if ! curl http://localhost:8080; then
+  # curl "$GET_HOST_IP:8080"
+  
+  if ! curl "$(hostname -I | awk '{print $1}')":8080; then
     echo -e "ERROR: error when trying to start vmDebian's nginx server\n"
   fi
 }
