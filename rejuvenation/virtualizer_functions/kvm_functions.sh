@@ -10,9 +10,9 @@
 #   utilities for managing kvm virtual machines                                               #
 ###############################################################################################
 
-VM_NAME="debian12"
+VM_NAME="debian125"
 
-GET_GUEST_IP="$(virsh net-dhcp-leases default | awk '/ipv4/ {gsub("/24", "", $5); print $5}')"
+GET_GUEST_IP="$(virsh net-dhcp-leases default | grep "debian" | awk '/ipv4/ {gsub("/24", "", $5); print $5}')"
 GET_HOST_IP="$(hostname -I | awk '{print $1}')"
 
 RESTART_LIBVIRTD_SERVICE() {
@@ -56,7 +56,7 @@ FORCED_REBOOT() {
 SSH_REBOOT() {
   ssh -p 2222 root@"$GET_HOST_IP" "systemctl restart libvirtd"
 
-  ssh -p 2222 root@"$GET_HOST_IP" "virsh reboot $VM_NAME"
+  ssh -p 2222 root@"$GET_HOST_IP" "reboot $VM_NAME"
 }
 
 # FUNCTION=CREATE_DISKS()
