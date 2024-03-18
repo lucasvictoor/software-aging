@@ -23,8 +23,8 @@ TURN_VM_OFF() {
 # DESCRIPTION:
 #   Unregisters the virtual machine and deletes all files associated with it
 DELETE_VM() {
-  TURN_VM_OFF 
-  xl destroy "$VM_NAME"
+  #TURN_VM_OFF 
+  #xl destroy "$VM_NAME"
   xl delete "$VM_NAME"
   # rm -rf /etc/xen/"$VM_NAME".cfg  # Remove configuration file
   # rm -rf /var/lib/xen/images/"$VM_NAME".img  # Remove disk image file
@@ -80,28 +80,30 @@ START_VM(){
 CREATE_VM() {
     local memory=512M
     local size=5G
-    # local ip 
-    # local netmask="255.255.255.0"
-    # local gateway 
+    local ip 
+    local netmask="255.255.255.0"
+    local gateway 
     local vcpus=2
     local password=12345678
 
-    # ip=$(ip route get 8.8.8.8 | awk '/src/ {print $7}')
-    # gateway=$(ip route | awk '/default via/ {print $3}')
+    ip=$(ip route get 8.8.8.8 | awk '/src/ {print $7}')
+    gateway=$(ip route | awk '/default via/ {print $3}')
 
+# creates two new logical volumes within vg0 for the xenDebian vm: one for the root disk and another for the swap device
     xen-create-image \
     --hostname "$VM_NAME" \
     --bridge=xenbr0 \
-    --dhcp \
+   
     --vcpus "$vcpus" \
     --memory "$memory" \
     --size "$size" \
     --dist bookworm \
     --password "$password" \
     --arch=amd64 \
-    --lvm=vg0 # creates two new logical volumes within vg0 for the xenDebian vm: one for the root disk and another for the swap device
-    # --ip "$ip" \
-    # --netmask "$netmask" --gateway "$gateway" \
+    --lvm=vg0 \ 
+    --ip="$ip" \
+    --netmask "$netmask" --gateway "$gateway" \
+     #--dhcp \
 }
 
 # FUNCTION=CREATE_DISKS()
@@ -157,7 +159,7 @@ REMOVE_DISKS() {
 
 # FUNCTION=ATTACH_DISK()
 # DESCRIPTION:
-#   Attaches disks to a Xen domU (xen "normal" virtual machines with no priviledges)
+#   Attaches disks to a Xen domU 
 #   https://www.systutorials.com/how-to-dynamically-attach-a-disk-to-running-domu-in-xen/
 #  
 # xl [-v] block-attach <Domain> <BackDev> <FrontDev> 
@@ -167,34 +169,37 @@ REMOVE_DISKS() {
 #   $VM_NAME
 #
 # PARAMETERS:
-#   $1 = disk_path  -->  set in en_workload.sh
-#   $2 = port       --> //
+#   $1 = disk_path  -->  set in xen_workload.sh
+#   $2 = frotend_name  --> set in xen_workload.sh
 #
 # USAGE:
 #   In the workload script for xen (xen_workload.sh):
 #       source ./virtualizer_functions/xen_functions.sh
-#       ATTACH_DISK "${disk_path}${count_disks}" "$port"   
+#       ATTACH_DISK "${disk_path}${count_disks}" "$frontend_name"   
 ATTACH_DISK() {
   local disk_path="$1"
-  local port="$2"
+  local frontend_name="$2"
 
-  xl block-attach "$VM_NAME" \
-    phy:"$disk_path" \
-    "$port" \
-    0 \
-    w
+  if xl block-attach "$VM_NAME" phy:"$disk_path" "$frontend_name" w; then
+    echo "Disk attached successfully: $disk_path -> $frontend_name"
+  else
+    echo "Failed to attach disk: $disk_path"
+  fi
 }
 
 # FUNCTION=DETACH_DISK()
 # DESCRIPTION:
-#   Dettaches disks to virtual machine
+#   Dettaches disks from virtual machine
 #
 # GLOBAL VARIABLES:
 #   $VM_NAME
 #
 DETACH_DISK() {
-  local disk_count="$1"
-  local port="$2"
+  local frontend_name="$1"
 
-  xl block-detach "$VM_NAME" "$port"
+  if xl block-detach "$VM_NAME" "$frontend_name"; then
+    echo "Disk detached successfully: $frontend_name"
+  else
+    echo "Failed to detach disk: $frontend_name"
+  fi
 }

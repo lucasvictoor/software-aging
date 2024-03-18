@@ -5,6 +5,10 @@
 # https://xen-tools.org/software/xen-tools/
 # https://wiki.debian.org/LVM#List_of_VG_commands
 
+# ############################## IMPORTS #############################
+source ../../machine_resources_monitoring/general_dependencies.sh
+# ####################################################################
+
 # FUNCTION=SYSTEM_UPDATE()
 # DESCRIPTION:
 # Attempts to update the host's repositories and system apps
@@ -42,7 +46,6 @@ CONFIGURE_GRUB_FOR_XEN(){
   update-grub
 }
 
-
 # FUNCTION=NETWORK_CONFIG()
 # DESCRIPTION:
 # Creates a bridge interface (xenbr0), connects it to the default network interface of the host by altering the '/etc/network/interfaces' file
@@ -57,9 +60,24 @@ NETWORK_CONFIG(){
 
     echo "Updating network configuration file..."
     cat > "$config_file" <<EOL
+
+# This file describes the network interfaces available on your system and how to activate them. For more information, see interfaces (5).
+
+Source /etc/network/interfaces.d/*
+
+#The loopback network interface
+
+auto lo
+
+iface lo inet loopback
+
+# The primary network interface
+allow-hotplug enp0s3
+iface enpes3 inet manual
+
 auto xenbr0
 iface xenbr0 inet dhcp
-    bridge_ports "$default_interface"
+    bridge_ports $default_interface
 EOL
 
   service networking restart
@@ -86,6 +104,7 @@ STORAGE_SETUP() {
 
 DEPENDENCIES_MAIN(){
   SYSTEM_UPDATE
+  INSTALL_GENERAL_DEPENDENCIES
   INSTALL_XEN_DEPENDENCIES
   INSTALL_UTILS
   CONFIGURE_GRUB_FOR_XEN
