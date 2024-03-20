@@ -5,7 +5,7 @@
 # Uname Research Group                                                                        #
 #                                                                                             #
 # ABOUT:                                                                                      #
-#   utilities for managing ( virtualbox ) virtual machines                                    #
+#   utilities for managing virtualbox virtual machines                                    #
 ###############################################################################################
 
 # ip_host_utils

@@ -50,8 +50,8 @@ elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
 elif [[ "$VIRTUALIZER_TYPE" == "xen" ]]; then
   XEN_HEADERS
 
-  processes/xen_oxenstored_monitoring.sh &
-  processes/xen_xenbus_monitoring.sh &
+  processes/xenstored_monitoring.sh &
+  processes/xenbus_monitoring.sh &
 fi
 
 general_resources/server-down-count.sh "$VIRTUALIZER_TYPE" &

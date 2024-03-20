@@ -5,7 +5,7 @@
 # Uname Research Group                                                                        #
 #                                                                                             #
 # ABOUT:                                                                                      #
-#   utilities for managing Xen virtual machines                                               #
+#   utilities for managing xen virtual machines                                               #
 ###############################################################################################
 
 VM_NAME="xenDebian"

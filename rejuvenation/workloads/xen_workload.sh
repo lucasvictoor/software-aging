@@ -1,8 +1,8 @@
 #!/bin/bash
 
-######################################## KVM - WORKLOAD #######################################
+######################################## XEN - WORKLOAD #######################################
 # ABOUT:                                                                                      #
-#   used to simulate workload on (xen) virtualization infrastructure                        #
+#   used to simulate workload on (xen) virtualization infrastructure                          #
 #                                                                                             #
 # WORKLOAD TYPE:                                                                              #
 #   DISKS                                                                                     #
@@ -16,16 +16,16 @@ source ../virtualizer_functions/xen_functions.sh
 # $1 = volume group
 # $2 = quantity of disks
 # USAGE
-# ./workload.sh vg0 50
+# In run (main):
+# bash workloads/xen_workload.sh 
 
 readonly wait_time_after_attach=10
 readonly wait_time_after_detach=10
 
 XEN_WORKLOAD() {
-  local volume_group="$1"
   local count_disks=1
-  local max_disks="$2"
-  local disk_path="/dev/${volume_group}/disk"
+  local max_disks=50
+  local disk_path="/dev/vg0/disk"
 
   while true; do
     for number in {1..3}; do
@@ -48,4 +48,4 @@ XEN_WORKLOAD() {
   done
 }
 
-XEN_WORKLOAD
+XEN_WORKLOAD 
