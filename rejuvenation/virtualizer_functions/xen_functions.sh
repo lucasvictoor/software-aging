@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-######################################## KVM FUNCTIONS ########################################
+######################################## XEN FUNCTIONS ########################################
 # Universidade Federal do Agreste de Pernambuco                                               #
 # Uname Research Group                                                                        #
 #                                                                                             #
 # ABOUT:                                                                                      #
-#   utilities for managing xen virtual machines                                               #
+#   utilities for managing Xen virtual machines                                               #
 ###############################################################################################
 
 VM_NAME="xenDebian"
@@ -21,13 +21,9 @@ TURN_VM_OFF() {
 
 # FUNCTION=DELETE_VM()
 # DESCRIPTION:
-#   Unregisters the virtual machine and deletes all files associated with it
+#   Deletes the DomU /etc/xen/xenDebian.cfg configuration file and all associated LVM volumes (swap and root disk) located in vg0
 DELETE_VM() {
-  #TURN_VM_OFF 
-  #xl destroy "$VM_NAME"
-  xl delete "$VM_NAME"
-  # rm -rf /etc/xen/"$VM_NAME".cfg  # Remove configuration file
-  # rm -rf /var/lib/xen/images/"$VM_NAME".img  # Remove disk image file
+  xen-delete-image --lvm=vg0 "$VM_NAME"
 }
 
 # FUNCTION=GRACEFUL_REBOOT()
@@ -39,6 +35,14 @@ GRACEFUL_REBOOT() {
     sleep 1
     echo "Waiting for machine to shutdown"
   done
+}
+
+# FUNCTION=FORCED_REBOOT()
+# DESCRIPTION:
+#   Forcibly reboot the virtual machine
+FORCED_REBOOT() {
+  xl destroy "$VM_NAME"
+  START_VM
 }
 
 REBOOT_VM() {
@@ -57,7 +61,8 @@ SSH_REBOOT() {
 #   $VM_NAME
 #
 START_VM(){
-  xl create -c /etc/xen/"$VM_NAME".cfg
+  xl create /etc/xen/"$VM_NAME".cfg
+  # takes a few seconds for the status to e updated
 }
 
 # FUNCTION=CREATE_VM()
@@ -70,13 +75,14 @@ START_VM(){
 # gateway - IP address of the router;
 #
 # vcpus - number of processor cores used by the vm;
-# memory - amount of Ram memory that the VM will use;
+# memory - amount of RAM that the VM will use;
 # size - size of the system image that will be created;
 # dist - linux distribution to be installed on the VM, in this case Debian 12 (bookworm);
 # password - password to access the virtualized system;
 # arch - system architecture;
 # bridge - in order for the VM to communicate via the network with the host machine,
 # it must have its own network interface connected as a bridge.
+# lvm=vg0 - creates two new logical volumes within vg0 for the xenDebian vm: one for the root disk and another for the swap device
 CREATE_VM() {
     local memory=512M
     local size=5G
@@ -89,11 +95,10 @@ CREATE_VM() {
     ip=$(ip route get 8.8.8.8 | awk '/src/ {print $7}')
     gateway=$(ip route | awk '/default via/ {print $3}')
 
-# creates two new logical volumes within vg0 for the xenDebian vm: one for the root disk and another for the swap device
+
     xen-create-image \
     --hostname "$VM_NAME" \
-    --bridge=xenbr0 \
-   
+    --dhcp \
     --vcpus "$vcpus" \
     --memory "$memory" \
     --size "$size" \
@@ -101,9 +106,9 @@ CREATE_VM() {
     --password "$password" \
     --arch=amd64 \
     --lvm=vg0 \ 
-    --ip="$ip" \
-    --netmask "$netmask" --gateway "$gateway" \
-     #--dhcp \
+    --bridge=xenbr0 
+    #--ip "$ip" \
+    #--netmask "$netmask" --gateway "$gateway" 
 }
 
 # FUNCTION=CREATE_DISKS()
@@ -134,28 +139,29 @@ CREATE_DISKS() {
 
 # FUNCTION=REMOVE_DISKS()
 # DESCRIPTION:
-#   Attempts to remove all disks from virtual machine
+#   Attempts to remove all disks from virtual machine, except the VM's swap and disk volumes
 #
 # LVM COMMANDS:
 # lvremove - removes a Logical Volume.
 REMOVE_DISKS() {
-  local count=1
-  local disks_quantity="$1"
   local volume_group="vg0"
+  local disks_list=$(lvdisplay | grep "LV Path" | grep "$volume_group"| grep -vE "${VM_NAME}-swap|${VM_NAME}-disk" | awk '{print $3}')
 
-  while [[ "$count" -le "$disks_quantity" ]]; do
-    lvremove -f "$volume_group/disk$count" >/dev/null 2>&1
+  if [ -z "$disks_list" ]; then
+    echo "No disks found in volume group $volume_group."
+    return
+  fi
+
+  for disk in $disks_list; do
+    lvremove -f "$disk" >/dev/null 2>&1
 
     if [ $? -eq 0 ]; then
-      echo "Disk$count removed successfully."
+      echo "Disk $disk removed successfully."
     else
-      echo "Error: Failed to remove disk$count."
+      echo "Error: Failed to remove $disk."
     fi
-
-    ((count++))
   done
 }
-
 
 # FUNCTION=ATTACH_DISK()
 # DESCRIPTION:

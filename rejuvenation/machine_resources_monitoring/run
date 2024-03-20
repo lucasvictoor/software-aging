@@ -25,6 +25,11 @@ KVM_HEADERS() {
   echo "cpu;mem;vsz;rss;threads;swap;date_time" >logs/kvm_libvirtd_service_monitoring.csv
 }
 
+XEN_HEADERS() {
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/xen_monitoring-xenbus.csv
+  echo "cpu;mem;vsz;rss;threads;swap;date_time" >logs/xen_monitoring-oxenstored.csv
+}
+
 MACHINE_HEADERS
 
 stap -o logs/fragmentation.csv memory_fragmentation/fragmentation2b.stp &
@@ -41,6 +46,12 @@ elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
 
   processes/kvmHeadless_monitoring.sh &
   processes/kvm_libvirtd_monitoring.sh &
+
+elif [[ "$VIRTUALIZER_TYPE" == "xen" ]]; then
+  XEN_HEADERS
+
+  processes/xen_oxenstored_monitoring.sh &
+  processes/xen_xenbus_monitoring.sh &
 fi
 
 general_resources/server-down-count.sh "$VIRTUALIZER_TYPE" &

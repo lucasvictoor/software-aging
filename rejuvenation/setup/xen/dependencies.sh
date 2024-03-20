@@ -18,7 +18,7 @@ SYSTEM_UPDATE() {
 
 # FUNCTION=INSTALL_XEN_AND_DEPENDENCIES()
 # DESCRIPTION:
-# Installs Xen dependencies if not already installed.
+# Installs Xen dependencies if not already installed
 INSTALL_XEN_DEPENDENCIES() {
   if ! which xen-system >/dev/null; then
     apt-get install xen-system -y
@@ -31,7 +31,7 @@ INSTALL_XEN_DEPENDENCIES() {
 #
 # xen-tools: This package will allow the creation of new guest Xen domains on a Debian host
 # lvm2: Allows the management of storage devices in a more abstract manner using LVM or 'Linux Logical Volume Manager'
-# net-tools: ////////////////////
+# net-tools: Includes the important tools for controlling the Linux kernel's networking subsystem
 # bridge-utils: Acts as a virtual switch, enabling the attachment of VMs to the external network
 INSTALL_UTILS(){
   apt install xen-tools lvm2 net-tools bridge-utils
@@ -61,19 +61,18 @@ NETWORK_CONFIG(){
     echo "Updating network configuration file..."
     cat > "$config_file" <<EOL
 
-# This file describes the network interfaces available on your system and how to activate them. For more information, see interfaces (5).
+# This file describes the network interfaces available on your system 
+# and how to activate them. For more information, see interfaces (5).
 
-Source /etc/network/interfaces.d/*
+source /etc/network/interfaces.d/*
 
-#The loopback network interface
-
+# The loopback network interface
 auto lo
-
 iface lo inet loopback
 
 # The primary network interface
 allow-hotplug enp0s3
-iface enpes3 inet manual
+iface enp0s3 inet manual
 
 auto xenbr0
 iface xenbr0 inet dhcp
@@ -94,7 +93,7 @@ EOL
 #
 # LVM COMMANDS:
 # pvcreate - declares /dev/sda4 as a physical volume available for the LVM
-# vgcreate — creates a volume group called 'vg0'
+# vgcreate - creates a volume group called 'vg0'
 #
 # REMINDER: Before using this function, ensure that /dev/sda4 is a dedicated partition you created for LVM use
 STORAGE_SETUP() { 

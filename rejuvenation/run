@@ -21,6 +21,9 @@ if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
 elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
   # shellcheck disable=SC1091
   source ./virtualizer_functions/kvm_functions.sh
+
+elif [[ "$VIRTUALIZER_TYPE" == "xen" ]]; then
+  source ./virtualizer_functions/xen_functions.sh
 fi
 
 #Time method
@@ -108,6 +111,8 @@ if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
   bash workloads/vbox_workload.sh &
 elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
   bash workloads/kvm_workload.sh &
+elif [[ "$VIRTUALIZER_TYPE" == "xen" ]]; then
+  bash workloads/xen_workload.sh &
 fi
 
 machine_resources_monitoring/run "$VIRTUALIZER_TYPE" &

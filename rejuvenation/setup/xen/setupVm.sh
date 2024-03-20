@@ -44,16 +44,12 @@ CREATE_VIRTUAL_MACHINE() {
 # DESCRIPTION:
 #     Removes all disks from the virtual machine
 #     Creates disks in the virtual machine from the given quantity and size
-# 
-# PARAMETERS:
-#     $1 == create disks
-#     $2 == remove disks
 #
 # DISK RECOMMENDATIONS:
 #     disks_quantity=50
 #     disks_size=1024
 DISKS_MANAGEMENT() {
-  REMOVE_DISKS
+  REMOVE_DISKS 
   ERROR_HANDLING "ERROR REMOVING DISKS" 0
 
   CREATE_DISKS 50 100 # temporarily 100MB CHANGE LATER
