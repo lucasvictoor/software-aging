@@ -34,25 +34,31 @@ MACHINE_HEADERS
 
 stap -o logs/fragmentation.csv memory_fragmentation/fragmentation2b.stp &
 
-if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
-  VBOX_HEADERS
-
-  processes/monitoring-VBoxXPCOMIPCD.sh &
-  processes/monitoring-VBoxHeadless.sh &
-  processes/monitoring-VBoxSVC.sh &
-
-elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
-  KVM_HEADERS
-
-  processes/kvmHeadless_monitoring.sh &
-  processes/kvm_libvirtd_monitoring.sh &
-
-elif [[ "$VIRTUALIZER_TYPE" == "xen" ]]; then
-  XEN_HEADERS
-
-  processes/xenstored_monitoring.sh &
-  processes/xenbus_monitoring.sh &
-fi
+case $VIRTUALIZER_TYPE in
+  "vbox")
+    VBOX_HEADERS
+    processes/monitoring-VBoxXPCOMIPCD.sh &
+    processes/monitoring-VBoxHeadless.sh &
+    processes/monitoring-VBoxSVC.sh &
+    ;;
+  "kvm")
+    KVM_HEADERS
+    processes/kvmHeadless_monitoring.sh &
+    processes/kvm_libvirtd_monitoring.sh &
+    ;;
+  "xen")
+    XEN_HEADERS
+    processes/xenstored_monitoring.sh &
+    processes/xenbus_monitoring.sh &
+    ;;
+  "lxc")
+    echo "No information available for LXC at the moment"
+    ;;
+  *)
+    echo "Unknown virtualizer type"
+    exit 1
+    ;;
+esac
 
 general_resources/server-down-count.sh "$VIRTUALIZER_TYPE" &
 

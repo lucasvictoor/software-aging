@@ -31,7 +31,7 @@ DELETE_VM() {
 #   Graceful reboot by turning vm off and on again
 GRACEFUL_REBOOT() {
   xl shutdown "$VM_NAME"
-  until xl create -c /etc/xen/"$VM_NAME".cfg; do
+  until xl create /etc/xen/"$VM_NAME".cfg; do
     sleep 1
     echo "Waiting for machine to shutdown"
   done
@@ -50,7 +50,8 @@ REBOOT_VM() {
 }
 
 SSH_REBOOT() {
-  ssh -p 2222 root@"$HOST_IP" "xl reboot $VM_NAME"
+  # working using the loopback interface (127.0.0.1)
+  ssh -p 2222 root@localhost "reboot now"
 }
 
 # FUNCTION=START_VM()
@@ -92,13 +93,16 @@ CREATE_VM() {
     local vcpus=2
     local password=12345678
 
-    ip=$(ip route get 8.8.8.8 | awk '/src/ {print $7}')
-    gateway=$(ip route | awk '/default via/ {print $3}')
+    #ip=$(ip route get 8.8.8.8 | awk '/src/ {print $7}')
+    #gateway=$(ip route | awk '/default via/ {print $3}')
 
 
     xen-create-image \
     --hostname "$VM_NAME" \
-    --dhcp \
+    --ip 10.0.2.17 \
+    --netmask "$netmask" \
+    --gateway "$gateway" \
+    --bridge=xenbr0 \
     --vcpus "$vcpus" \
     --memory "$memory" \
     --size "$size" \
@@ -106,9 +110,122 @@ CREATE_VM() {
     --password "$password" \
     --arch=amd64 \
     --lvm=vg0 \ 
-    --bridge=xenbr0 
-    #--ip "$ip" \
-    #--netmask "$netmask" --gateway "$gateway" 
+    --role=editor \
+    --finalrole=install-nginx
+}
+
+# FUNCTION=CREATING_DOMU_ROLES()
+# DESCRIPTION:
+#  Attempts to fix the problem of distinct network interface names upon the creation of the domU
+#  Modifies the ssh config file of the domU to allow password login (to be done / might not be necessary)
+#  Installs the nginx server on the domU
+CREATING_DOMU_ROLES(){
+  local sed_directory="/etc/xen-tools/sed.d"
+  local role_directory="/etc/xen-tools/role.d/"
+
+  # Step 1: Create the sed.d directory if it doesn't exist
+  if [ ! -d "$sed_directory" ]; then
+    mkdir -p "$sed_directory"
+  fi
+
+  # Step 2: Create the interfaces.sed file inside the sed.d directory
+  local interfaces_sed="$sed_directory/etc/network/interfaces.sed"
+  cat <<EOF > "$interfaces_sed"
+#!/bin/sed -f
+
+# Replace the interface name eth0 with enX0
+s/auto eth0/auto enX0/
+s/iface eth0 inet static/iface enX0 inet static/
+EOF
+
+  # Step 3: Update the role script to apply sed scripts 
+  cat <<EOF > "$role_directory/editor"
+#!/bin/sh
+#
+# Role-script for generalised editing of files for guests.
+# This script works via a skeleton directory containing small .sed files
+# which will contain edits to be applied to an arbitrary tree of files upon
+# the new domU.
+#
+# For example, if we have the following sed file:
+# /etc/xen-tools/sed.d/etc/network/interfaces.sed
+# this will be applied to /etc/network/interfaces upon the new guest if it exists.
+# If the file encoded in the name doesn't exist then it will be ignored.
+#
+# Steve
+# --
+
+# Source common functions if available for installing a Debian package
+if [ -e /usr/share/xen-tools/common.sh ]; then
+    . /usr/share/xen-tools/common.sh
+else
+    echo "Installation problem"
+fi
+
+# Define the installation directory and the prefix for finding scripts
+prefix="\$1"
+source="/etc/xen-tools/sed.d/"
+
+# Log the start of the script
+logMessage "Script \$0 starting"
+
+# Check if the source directory exists
+if [ ! -d "\${source}" ]; then
+    logMessage "Source directory \${source} not found"
+    exit
+fi
+
+# Now find files which exist.
+for sed_script in \$(find "\${source}" -name '*.sed' -print); do
+    # Get the name of the file, minus the source prefix
+    file="\${sed_script#\${source}}"
+
+    # Strip the .sed suffix
+    file=\$(echo "\$file" | sed -e 's/\.sed\$//')
+
+    # Check if the file exists in the new install
+    if [ -e "\${prefix}/\$file" ]; then
+        # Log the execution of the script
+        logMessage "Running script \$sed_script - against \${prefix}/\$file"
+
+        # Apply the sed script to the corresponding file in the new install
+        sed -i~ -f "\$sed_script" "\${prefix}/\$file"
+    fi
+done
+
+# Log the finish of the script
+logMessage "Script \$0 finished"
+EOF
+
+  # Step 4: Install and bring up Nginx in the DomU
+  cat <<EOF > "$$role_directory/install-nginx"
+#!/bin/sh
+#
+# Role-script for installing Nginx upon the new guest system.
+#
+
+# Assign the prefix variable representing the root directory of the guest system
+prefix=$1
+
+# Source common functions if available for installing a Debian package
+if [ -e /usr/share/xen-tools/common.sh ]; then
+    . /usr/share/xen-tools/common.sh
+else
+    echo "Installation problem"
+fi
+
+# Log the start of the script
+logMessage "Script $0 starting"
+
+# Install Nginx package
+installDebianPackage "${prefix}" nginx
+
+# Log the finish of the script
+logMessage "Script $0 finished"
+
+EOF
+  # Set permissions for the role script
+  chmod +x "$role_directory/editor" "$$role_directory/install-nginx"
 }
 
 # FUNCTION=CREATE_DISKS()

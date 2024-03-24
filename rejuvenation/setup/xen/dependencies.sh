@@ -48,7 +48,7 @@ CONFIGURE_GRUB_FOR_XEN(){
 
 # FUNCTION=NETWORK_CONFIG()
 # DESCRIPTION:
-# Creates a bridge interface (xenbr0), connects it to the default network interface of the host by altering the '/etc/network/interfaces' file
+# Creates a bridge interface (xenbr0) in the dom0, connects it to the default network interface of the host by altering the '/etc/network/interfaces' file
 NETWORK_CONFIG(){
   local config_file="/etc/network/interfaces"
   local default_interface=$(ip -o -4 route show to default | awk '{print $5}' | grep -v '^lo$' | grep -v '^vir' | head -n 1)
@@ -80,6 +80,23 @@ iface xenbr0 inet dhcp
 EOL
 
   service networking restart
+}
+
+# REDIRECT_PORTS()
+# DESCRIPTION:
+# Redirect SSH traffic from port 2222 on the host to port 22 on the Xen domU
+# Redirect HTTP traffic from port 8080 on the host to port 80 on the Xen domU
+# Check if the redirection rules are correctly applied
+REDIRECT_PORTS(){
+  sudo iptables -t nat -A PREROUTING -p tcp --dport 2222 -j DNAT --to <domU_IP>:22
+
+  sudo iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to <domU_IP>:80
+
+  if sudo iptables -t nat -L | grep -qE '(to:10.0.2.17:22|to:10.0.2.17:80)'; then
+    echo "Port redirection rules have been successfully applied."
+  else
+    echo "Failed to apply port redirection rules. Please check iptables configuration."
+  fi
 }
 
 # FUNCTION=STORAGE_SETUP()

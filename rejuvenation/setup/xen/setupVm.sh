@@ -56,7 +56,7 @@ DISKS_MANAGEMENT() {
   ERROR_HANDLING "ERROR CREATING DISKS" 0
 }
 
-#COPY_SSH_ID_AND_TEST_VIRTUAL_MACHINE_SERVER   ////// ADAPT FOR XEN
+#COPY_SSH_ID_AND_TEST_VIRTUAL_MACHINE_SERVER  
 # DESCRIPTION:
 #   ssh-copy-id:
 #       have an ssh key already created, then it will be copied with ssh-copy 
@@ -64,12 +64,12 @@ DISKS_MANAGEMENT() {
 #
 #   curl:
 #       Checks whether the request to the server was successful
-#TEST_VIRTUAL_MACHINE_SERVER() {
-#  sleep 10
-#  if ! curl http://localhost:8080; then
-#    echo -e "ERROR: error when trying to start xenDebian's nginx server\n"
-#  fi
-#}
+TEST_VIRTUAL_MACHINE_SERVER() {
+  sleep 10
+  if ! curl http://localhost:8080; then
+    echo -e "ERROR: error when trying to start xenDebian's nginx server\n"
+  fi
+}
 
 # START_VIRTUAL_MACHINE_IN_BACKGROUND
 # DESCRIPTION:
@@ -87,7 +87,7 @@ SETUP_VM() {
   DISKS_MANAGEMENT
   CREATE_VIRTUAL_MACHINE
   START_MACHINE
-  # TEST_VIRTUAL_MACHINE_SERVER
+  TEST_VIRTUAL_MACHINE_SERVER
 }
 
 SETUP_VM

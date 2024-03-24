@@ -14,17 +14,29 @@
 #   vbox | kvm | xen
 readonly VIRTUALIZER_TYPE="vbox"
 
-if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
-  # shellcheck disable=SC1091
-  source ./virtualizer_functions/vbox_functions.sh
-
-elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
-  # shellcheck disable=SC1091
-  source ./virtualizer_functions/kvm_functions.sh
-
-elif [[ "$VIRTUALIZER_TYPE" == "xen" ]]; then
-  source ./virtualizer_functions/xen_functions.sh
-fi
+# ############################## IMPORTS #############################
+case "$VIRTUALIZER_TYPE" in
+  "vbox")
+    # shellcheck disable=SC1091
+    source ./virtualizer_functions/vbox_functions.sh
+    ;;
+  "kvm")
+    # shellcheck disable=SC1091
+    source ./virtualizer_functions/kvm_functions.sh
+    ;;
+  "xen")
+    # shellcheck disable=SC1091
+    source ./virtualizer_functions/xen_functions.sh
+    ;;
+  "lxc")
+    echo "No information available for LXC at the moment"
+    exit 1
+    ;;
+  *)
+    echo "Unknown virtualizer type: $VIRTUALIZER_TYPE"
+    ;;
+esac
+# ####################################################################
 
 #Time method
 minutes=0
@@ -107,13 +119,24 @@ function REBOOT_VM() {
 
 START_VM
 
-if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
-  bash workloads/vbox_workload.sh &
-elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
-  bash workloads/kvm_workload.sh &
-elif [[ "$VIRTUALIZER_TYPE" == "xen" ]]; then
-  bash workloads/xen_workload.sh &
-fi
+case "$VIRTUALIZER_TYPE" in
+  "vbox")
+    bash workloads/vbox_workload.sh &
+    ;;
+  "kvm")
+    bash workloads/kvm_workload.sh &
+    ;;
+  "xen")
+    bash workloads/xen_workload.sh &
+    ;;
+  "lxc")
+    echo "No information available for LXC at the moment"
+    exit 1
+    ;;
+  *)
+    echo "Unknown virtualizer type: $VIRTUALIZER_TYPE"
+    ;;
+esac
 
 machine_resources_monitoring/run "$VIRTUALIZER_TYPE" &
 
