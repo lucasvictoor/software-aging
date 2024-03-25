@@ -9,8 +9,8 @@
 
 while true; do
   :
+
   pid_oxenstored=$(pidof -s oxenstored)
-  
   date_time=$(date +%d-%m-%Y-%H:%M:%S)
 
   if [ -n "$pid_oxenstored" ]; then

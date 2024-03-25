@@ -45,12 +45,19 @@ FORCED_REBOOT() {
   START_VM
 }
 
+# FUNCTION=REBOOT_VM()
+# DESCRIPTION:
+#  Attempts to reboot the domU (used in the dom0)
 REBOOT_VM() {
   xl reboot "$VM_NAME"
 }
 
+# FUNCTION=SSH_REBOOT()
+# DESCRIPTION:
+#  Attempts to reboot a domU by connecting to it via ssh
+#  Port redirecting need to be done in the dom0 
 SSH_REBOOT() {
-  # working using the loopback interface (127.0.0.1)
+  # using the loopback interface (127.0.0.1)
   ssh -p 2222 root@localhost "reboot now"
 }
 
@@ -63,18 +70,16 @@ SSH_REBOOT() {
 #
 START_VM(){
   xl create /etc/xen/"$VM_NAME".cfg
-  # takes a few seconds for the status to e updated
+  # takes a few seconds for the status to be updated (in xl list)
 }
 
 # FUNCTION=CREATE_VM()
 # DESCRIPTION:
 # 
 # hostname - VM name;
-#
 # ip - IP address for communication with the VM;
 # netmask - network mask, leave the default 255.255.255.0;
 # gateway - IP address of the router;
-#
 # vcpus - number of processor cores used by the vm;
 # memory - amount of RAM that the VM will use;
 # size - size of the system image that will be created;
@@ -94,8 +99,7 @@ CREATE_VM() {
     local password=12345678
 
     #ip=$(ip route get 8.8.8.8 | awk '/src/ {print $7}')
-    #gateway=$(ip route | awk '/default via/ {print $3}')
-
+    gateway=$(ip route | awk '/default via/ {print $3}')
 
     xen-create-image \
     --hostname "$VM_NAME" \
@@ -117,11 +121,13 @@ CREATE_VM() {
 # FUNCTION=CREATING_DOMU_ROLES()
 # DESCRIPTION:
 #  Attempts to fix the problem of distinct network interface names upon the creation of the domU
-#  Modifies the ssh config file of the domU to allow password login (to be done / might not be necessary)
+#  Modifies the ssh config file of the domU to allow password login 
 #  Installs the nginx server on the domU
 CREATING_DOMU_ROLES(){
   local sed_directory="/etc/xen-tools/sed.d"
   local role_directory="/etc/xen-tools/role.d/"
+  local interfaces_sed="$sed_directory/etc/network/interfaces.sed"
+  local ssh_sed="$sed_directory/etc/ssh/sshd_config.sed"
 
   # Step 1: Create the sed.d directory if it doesn't exist
   if [ ! -d "$sed_directory" ]; then
@@ -129,7 +135,9 @@ CREATING_DOMU_ROLES(){
   fi
 
   # Step 2: Create the interfaces.sed file inside the sed.d directory
-  local interfaces_sed="$sed_directory/etc/network/interfaces.sed"
+  if [ ! -d "$(dirname "$interfaces_sed")" ]; then
+  mkdir -p "$(dirname "$interfaces_sed")"
+  fi
   cat <<EOF > "$interfaces_sed"
 #!/bin/sed -f
 
@@ -138,7 +146,17 @@ s/auto eth0/auto enX0/
 s/iface eth0 inet static/iface enX0 inet static/
 EOF
 
-  # Step 3: Update the role script to apply sed scripts 
+  # Step 3: Create sshd_config.sed file inside the sed.d directory
+  if [ ! -d "$(dirname "$ssh_sed")" ]; then
+  mkdir -p "$(dirname "$ssh_sed")"
+  fi
+  cat <<EOF > "$ssh_sed"
+#!/bin/sed -f
+# Permit root login
+s/^#PermitRootLogin.*/PermitRootLogin yes/
+EOF
+
+  # Step 4: Update the role script to apply sed scripts 
   cat <<EOF > "$role_directory/editor"
 #!/bin/sh
 #
@@ -197,8 +215,8 @@ done
 logMessage "Script \$0 finished"
 EOF
 
-  # Step 4: Install and bring up Nginx in the DomU
-  cat <<EOF > "$$role_directory/install-nginx"
+  # Step 5: Install and bring up Nginx in the DomU
+  cat <<EOF > "$$role_directory/install-nginx" # Create new role script 
 #!/bin/sh
 #
 # Role-script for installing Nginx upon the new guest system.
@@ -220,11 +238,19 @@ logMessage "Script $0 starting"
 # Install Nginx package
 installDebianPackage "${prefix}" nginx
 
-# Log the finish of the script
-logMessage "Script $0 finished"
+#  Make sure the Nginx server isn't running, this will cause our
+# unmounting of the disk image to fail..
 
+chroot ${prefix} /etc/init.d/nginx stop
+
+#  Copy nginx update.conf & defaults from Dom0
+cp /etc/nginx/update.conf ${prefix}/etc/nginx/
+cp /etc/default/nginx ${prefix}/etc/default/
+
+#  Log our finish
+logMessage Script $0 finished
 EOF
-  # Set permissions for the role script
+  # Set permissions for the role scripts
   chmod +x "$role_directory/editor" "$$role_directory/install-nginx"
 }
 
@@ -256,7 +282,7 @@ CREATE_DISKS() {
 
 # FUNCTION=REMOVE_DISKS()
 # DESCRIPTION:
-#   Attempts to remove all disks from virtual machine, except the VM's swap and disk volumes
+#   Attempts to remove all disks from the virtual machine, except the VM's swap and disk volumes
 #
 # LVM COMMANDS:
 # lvremove - removes a Logical Volume.

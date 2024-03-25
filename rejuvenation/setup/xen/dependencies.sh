@@ -33,8 +33,9 @@ INSTALL_XEN_DEPENDENCIES() {
 # lvm2: Allows the management of storage devices in a more abstract manner using LVM or 'Linux Logical Volume Manager'
 # net-tools: Includes the important tools for controlling the Linux kernel's networking subsystem
 # bridge-utils: Acts as a virtual switch, enabling the attachment of VMs to the external network
+# iptables: useful for port redirecting dom0's 2222 -> domU's 22 and dom0's 8080 -> domU's 80
 INSTALL_UTILS(){
-  apt install xen-tools lvm2 net-tools bridge-utils
+  apt install xen-tools lvm2 net-tools bridge-utils iptables 
 }
 
 # FUNCTION=CONFIGURE_GRUB_FOR_XEN()
@@ -60,7 +61,6 @@ NETWORK_CONFIG(){
 
     echo "Updating network configuration file..."
     cat > "$config_file" <<EOL
-
 # This file describes the network interfaces available on your system 
 # and how to activate them. For more information, see interfaces (5).
 
@@ -84,15 +84,15 @@ EOL
 
 # REDIRECT_PORTS()
 # DESCRIPTION:
-# Redirect SSH traffic from port 2222 on the host to port 22 on the Xen domU
-# Redirect HTTP traffic from port 8080 on the host to port 80 on the Xen domU
-# Check if the redirection rules are correctly applied
+#   Redirect SSH traffic from port 2222 on the host to port 22 on the Xen domU
+#   Redirect HTTP traffic from port 8080 on the host to port 80 on the Xen domU
+#   Check if the redirection rules are correctly applied
 REDIRECT_PORTS(){
-  sudo iptables -t nat -A PREROUTING -p tcp --dport 2222 -j DNAT --to <domU_IP>:22
+  iptables -t nat -A PREROUTING -p tcp --dport 2222 -j DNAT --to 10.0.2.17:22
 
-  sudo iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to <domU_IP>:80
+  iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to 10.0.2.17:80
 
-  if sudo iptables -t nat -L | grep -qE '(to:10.0.2.17:22|to:10.0.2.17:80)'; then
+  if iptables -t nat -L | grep -qE '(to:10.0.2.17:22|to:10.0.2.17:80)'; then
     echo "Port redirection rules have been successfully applied."
   else
     echo "Failed to apply port redirection rules. Please check iptables configuration."
@@ -100,17 +100,18 @@ REDIRECT_PORTS(){
 }
 
 # FUNCTION=STORAGE_SETUP()
-# Configures /dev/sda4 to be the physical volume of LVM or 'Linux Logical Volume Manager' in order to 
-# set up foundation for creating disks for future VMs
+# DESCRIPTION:
+#   Configures /dev/sda4 to be the physical volume of LVM or 'Linux Logical Volume Manager' in order to 
+#   set up foundation for creating disks for future VMs
 # 
 # Useful definitions:
-# PV - Physical Volumes. This means the hard disk, hard disk partitions, RAID or LUNs from a SAN which form "Physical Volumes" (or PVs)
-# VG - Volume Groups. This is a collection of one or more Physical Volumes
-# LV - Logical Volumes. LVs sit inside a Volume Group and form, in effect, a virtual partition
+#   PV - Physical Volumes. This means the hard disk, hard disk partitions, RAID or LUNs from a SAN which form "Physical Volumes" (or PVs)
+#   VG - Volume Groups. This is a collection of one or more Physical Volumes
+#   LV - Logical Volumes. LVs sit inside a Volume Group and form, in effect, a virtual partition
 #
 # LVM COMMANDS:
-# pvcreate - declares /dev/sda4 as a physical volume available for the LVM
-# vgcreate - creates a volume group called 'vg0'
+#   pvcreate - declares /dev/sda4 as a physical volume available for the LVM
+#   vgcreate - creates a volume group called 'vg0'
 #
 # REMINDER: Before using this function, ensure that /dev/sda4 is a dedicated partition you created for LVM use
 STORAGE_SETUP() { 

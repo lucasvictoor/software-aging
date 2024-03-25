@@ -66,7 +66,8 @@ DISKS_MANAGEMENT() {
 #       Checks whether the request to the server was successful
 TEST_VIRTUAL_MACHINE_SERVER() {
   sleep 10
-  if ! curl http://localhost:8080; then
+
+  if ! curl http://localhost:80; then
     echo -e "ERROR: error when trying to start xenDebian's nginx server\n"
   fi
 }

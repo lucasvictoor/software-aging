@@ -3,8 +3,9 @@
 # Script to continuously monitor the Xenbus process and log resource usage to a CSV file
 
 while true; do
+  :
+
   pid_xenbus=$(pidof -s xenbus)
-  
   date_time=$(date +%d-%m-%Y-%H:%M:%S)
 
   if [ -n "$pid_xenbus" ]; then
