@@ -5,7 +5,7 @@
 # Uname Research Group                                                                        #
 #                                                                                             #
 # ABOUT:                                                                                      #
-#   utilities for managing ( virtualbox ) virtual machines                                    #
+#   utilities for managing virtualbox virtual machines                                    #
 ###############################################################################################
 
 # ip_host_utils
@@ -167,9 +167,9 @@ START_VM() {
 #   VBoxManage storageattach ... --medium "$disk_path"
 #
 # USAGE:
-#   In the main script (run.sh):
-#       source ./vbox_functions.sh
-#       ATTACH_DISK software-aging/disks/disk1.vhd
+#   In the workload script for vbox (vbox_workload.sh):
+#       source ./virtualizer_functions/vbox_functions.sh
+#       ATTACH_DISK "${disk_path}${count_disks}.vhd" "$port"
 ATTACH_DISK() {
   local disk_path="$1"
   local port="$2"

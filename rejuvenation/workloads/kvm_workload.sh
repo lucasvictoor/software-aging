@@ -4,7 +4,7 @@
 
 ######################################## KVM - WORKLOAD #######################################
 # ABOUT:                                                                                      #
-#   used to simulate workload on ( kvm ) virtualization infrastructure                        #
+#   used to simulate workload on (kvm) virtualization infrastructure                        #
 #                                                                                             #
 # WORKLOAD TYPE:                                                                              #
 #   DISKS                                                                                     #
