@@ -1,0 +1,28 @@
+general:
+    runs: 3 # number of runs
+    software: "docker"
+    images_server_folder: "192.168.1.1:/home/root/container-aging/data/images"
+    logs_dir: "logs"
+
+monitoring:
+    sleep_time: 5  # in seconds
+
+stressload:
+    max_stress_time: 60  # in seconds
+    wait_after_stress: 100  # in seconds
+    max_container_wait_time: 10  # in seconds
+    lifecycle_runs: 1 # number of lifecycle runs
+
+containers:
+  - name: postgres
+    host_port: 5432
+    port: 5432
+  - name: redis
+    host_port: 6379
+    port: 6379
+  - name: rabbitmq
+    host_port: 5672
+    port: 5672
+  - name: nginx
+    host_port: 8085
+    port: 80
