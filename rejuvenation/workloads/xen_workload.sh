@@ -1,48 +1,51 @@
-#!/usr/bin/env bash
-# usage:
-#   $ bash workload.sh
+#!/bin/bash
 
-######################################## VBOX - WORKLOAD ######################################
+######################################## XEN - WORKLOAD #######################################
 # ABOUT:                                                                                      #
-#   used to simulate workload on (virtualbox) virtualization infrastructure                 #
+#   used to simulate workload on (xen) virtualization infrastructure                          #
 #                                                                                             #
 # WORKLOAD TYPE:                                                                              #
 #   DISKS                                                                                     #
 ###############################################################################################
 
 # ####################### IMPORTS #######################
-source ./virtualizer_functions/vbox_functions.sh
+source ../virtualizer_functions/xen_functions.sh
 # #######################################################
+
+# PARAMETERS
+# $1 = volume group
+# $2 = quantity of disks
+# USAGE
+# In run (main):
+# bash workloads/xen_workload.sh 
 
 readonly wait_time_after_attach=10
 readonly wait_time_after_detach=10
 
-# FUNCTION=VBOX_WORKLOAD()
-VBOX_WORKLOAD() {
-  local count_disks=1                   # start disk count from 1 to n
-  local disk_path="setup/virtualbox/disks/disk"    # path where the disks are to start the workload
+XEN_WORKLOAD() {
+  local count_disks=1
   local max_disks=50
+  local disk_path="/dev/vg0/disk"
 
   while true; do
-    # looping to attach
-    for port in {1..3}; do
-      ATTACH_DISK "${disk_path}${count_disks}.vhd" "$port"
-
+    for number in {1..3}; do
+      local frontend_name="xvdb${number}"
+      ATTACH_DISK "${disk_path}${count_disks}" "$frontend_name"
+      sleep "$wait_time_after_attach"
+      
       if [[ "$count_disks" -eq "$max_disks" ]]; then
         count_disks=1
       else
         ((count_disks++))
       fi
-      sleep $wait_time_after_attach
     done
 
-    # looping to detach
-    for port in {1..3}; do
-      DETACH_DISK "$port"
-      sleep $wait_time_after_detach
-
+    for number in {1..3}; do
+      local frontend_name="xvdb${number}"
+      DETACH_DISK "$frontend_name"
+      sleep "$wait_time_after_detach"
     done
   done
 }
 
-VBOX_WORKLOAD
+XEN_WORKLOAD 

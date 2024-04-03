@@ -4,7 +4,9 @@
 # and logging downtime information to a CSV file
 
 # ############################## IMPORTS #############################
-source ../virtualizer_functions/kvm_functions.sh
+if [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
+source ../../virtualizer_functions/kvm_functions.sh
+fi
 # ####################################################################
 
 started_at=0
@@ -13,23 +15,27 @@ down_count=0
 
 VIRTUALIZER_TYPE=$1
 
-if [[ "$VIRTUALIZER_TYPE" == "vbox" ]]; then
-  # url="192.168.122.114"
-  url="http://localhost:8080"
-
-elif [[ "$VIRTUALIZER_TYPE" == "kvm" ]]; then
-  # url="192.168.122.114"
-  url="$GET_HOST_IP:8080"
-  # url="192.168.1.3:8080"
-
-elif [[ "$VIRTUALIZER_TYPE" == "xen" ]]; then
-  echo -e "nada por enquanto"
-  # return 1
-
-else
-  echo -e "erro ao tentar executar ./server-down-count.sh em obter ip do server"
-  # return 1
-fi
+case $VIRTUALIZER_TYPE in
+  "vbox")
+    url="http://localhost:8080"
+    ;;
+  "kvm")
+    #url="192.168.122.114"
+    url="$GET_HOST_IP:8080"
+    #url="192.168.1.3:8080"
+    ;;
+  "xen")
+    url="http://localhost:8080"
+    ;;
+  "lxc")
+    echo "No information available for LXC at the moment"
+    exit 1
+    ;;
+  *)
+    echo "Unknown virtualizer type"
+    exit 1
+    ;;
+esac
 
 while true; do
   if [ "$is_offline" -eq 0 ]; then
