@@ -1,5 +1,5 @@
 # Use a imagem base do Debian com a tag bookworm-20231218
-FROM debian:bookworm-20231218
+FROM debian:bookworm-20240311
 
 # Atualize os pacotes e instale o servidor nginx e o procps
 RUN apt-get update && apt-get install -y postgresql-15 procps
