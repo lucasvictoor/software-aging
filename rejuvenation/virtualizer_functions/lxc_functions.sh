@@ -22,11 +22,17 @@ DELETE_VM() {
   lxc-destroy -n "$VM_NAME"
 }
 
+# FUNCTION=GRACEFUL_REBOOT()
+# DESCRIPTION:
+#   Graceful reboot by turning vm off and on again
 GRACEFUL_REBOOT() {
   lxc-stop -n "$VM_NAME"
   lxc-start -n "$VM_NAME"
 }
 
+# FUNCTION=FORCED_REBOOT()
+# DESCRIPTION:
+#   Forcibly reboot the virtual machine
 FORCED_REBOOT() {
   lxc-stop -n "$VM_NAME"
   lxc-start -n "$VM_NAME"
