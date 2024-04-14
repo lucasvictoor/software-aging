@@ -10,7 +10,7 @@ monitor_service() {
   #rabbitmq pgrep -f "rabbitmq-server"
   #postgres pgrep -f "/usr/lib/postgresql/15/bin/postgres -D /usr/local/pgsql/data -i"
 
-  until pgrep -f "redis-server" >/dev/null; do
+  until pgrep -f "rabbitmq-server" >/dev/null; do
     echo ""
   done
 
@@ -24,19 +24,19 @@ monitor_service() {
 monitor_service &
 
 # RabbitMQ
-#/usr/lib/rabbitmq/bin/rabbitmq-server
+/usr/lib/rabbitmq/bin/rabbitmq-server
 
 #nginx
 #nginx -g "daemon off;"
 
 #Postgres
-if [ -z "$(ls -A /usr/local/pgsql/data)" ]; then
-  su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /usr/local/pgsql/data"
-  echo "host all all all trust" >> /usr/local/pgsql/data/pg_hba.conf
-  echo "listen_addresses='*'" >> /usr/local/pgsql/data/postgresql.conf
-fi
-
-su - postgres -c "/usr/lib/postgresql/15/bin/postgres -D /usr/local/pgsql/data -i"
+#if [ -z "$(ls -A /usr/local/pgsql/data)" ]; then
+#  su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /usr/local/pgsql/data"
+#  echo "host all all all trust" >> /usr/local/pgsql/data/pg_hba.conf
+#  echo "listen_addresses='*'" >> /usr/local/pgsql/data/postgresql.conf
+#fi
+#
+#su - postgres -c "/usr/lib/postgresql/15/bin/postgres -D /usr/local/pgsql/data -i"
 
 # Redis
-redis-server
+#redis-server --protected-mode no
