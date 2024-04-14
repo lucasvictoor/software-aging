@@ -4,45 +4,60 @@
 source ../../machine_resources_monitoring/general_dependencies.sh
 # ####################################################################
 
-# FUNCTION=SYSTEM_UPDATE()
+# SYSTEM_UPDATE()
 # DESCRIPTION:
 # Attempts to update the host's repositories and system apps
 SYSTEM_UPDATE() {
-  apt-get update && apt-get upgrade
+  sudo apt-get update && sudo apt-get upgrade -y
 } 
 
+INSTALL_UTILS() {
+  echo "Instalando utilitários necessários: lxc-templates e bridge-utils..."
+  if sudo apt-get install lxc-templates bridge-utils -y; then
+    echo "Utilitários instalados com sucesso."
+  else
+    echo "Erro ao instalar utilitários." >&2
+    exit 1
+  fi
+}
+
+# LXC_INSTALL()
+# DESCRIPTION:
 # Install LXC if it's not installed
 LXC_INSTALL() {
-  if dpkg -l | grep -q '^ii.*lxc'; then
-    echo "Ignorando a adição do LXC porque já está configurado."
-  else
-    if ! apt install lxc -y; then
+  if ! dpkg -l lxc | grep -q '^ii'; then
+    echo "LXC não está instalado, instalando..."
+    if ! sudo apt-get install lxc -y; then
       echo -e "\nERRO: Erro ao tentar instalar o LXC\n" >&2
       exit 1
     else
       echo -e "\nLXC instalado com sucesso\n"
     fi
+  else
+    echo "LXC já está instalado, ignorando."
   fi
 }
 
-# START_DEPENDENCIES
+# INSTALL_DEPENDENCIES()
 # DESCRIPTION:
-#   starts dependency checking and install dependencies requirements
+# Starts dependency checking and installs dependencies requirements
 INSTALL_DEPENDENCIES() {
-  case $DISTRO_ID in
-  "debian" | "ubuntu")
+  if [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+  else
+    echo "Não foi possível determinar a distribuição do sistema."
+    exit 1
+  fi
+
+  if [ $ID = "debian" ]; then
+    SYSTEM_UPDATE
     INSTALL_GENERAL_DEPENDENCIES
     LXC_INSTALL
-
     echo -e "\nInstalações completas\n"
-    return 0
-    ;;
-
-  *)
-    echo "ERRO: erro ao identificar a distribuição"
+  else
+    echo "ERRO: Este script é apenas para Debian."
     exit 1
-    ;;
-  esac
+  fi
 }
 
 INSTALL_DEPENDENCIES

@@ -9,32 +9,28 @@ readonly VM_NAME="vmDebian"
 CREATE_VM() {
   local rootfs="/var/lib/lxc/$VM_NAME/rootfs"
 
-  lxc init debian12 --vm --empty
-  lxc config device override debian12 root size=5G
-  lxc config set debian12 limits.cpu=2 limits.memory=512M
-  #lxc config device add debian12 vtpm tpm path=/dev/tpm0
-  
-  lxc exec debian12 -- apt-get update
-  lxc exec debian12 -- apt-get install -y openssh-server
-  lxc exec debian12 -- apt-get install -y nginx
-  
-  lxc config device add install disk source=/path/to/software-aging/debian12.lxd.iso boot.priority=10
+  lxc launch images:debian/12 $VM_NAME --vm -s default
+  lxc config set $VM_NAME limits.cpu=2 limits.memory=512MB
+
+  sleep 10
+  lxc exec $VM_NAME -- bash -c "apt-get update && apt-get install -y openssh-server nginx"
 }
 
 START_VM() {
-  lxc-start -n "$VM_NAME"
+  lxc start "$VM_NAME"
 }
 
 STOP_VM() {
-  lxc-stop -n "$VM_NAME"
+  lxc stop "$VM_NAME"
 }
 
 DELETE_VM() {
-  lxc-destroy -n "$VM_NAME"
+  lxc delete "$VM_NAME" --force
 }
 
 RESTART_VM() {
   STOP_VM
+  sleep 5
   START_VM
 }
 

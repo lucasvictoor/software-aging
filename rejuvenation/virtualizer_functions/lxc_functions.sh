@@ -11,31 +11,31 @@
 VM_NAME="vmDebian"
 
 START_VM() {
-  lxc-start -n "$VM_NAME"
+  lxc start "$VM_NAME"
 }
 
 STOP_VM() {
-  lxc-stop -n "$VM_NAME"
+  lxc stop "$VM_NAME"
 }
 
 DELETE_VM() {
-  lxc-destroy -n "$VM_NAME"
+  lxc delete "$VM_NAME" --force
 }
 
 # FUNCTION=GRACEFUL_REBOOT()
 # DESCRIPTION:
 #   Graceful reboot by turning vm off and on again
 GRACEFUL_REBOOT() {
-  lxc-stop -n "$VM_NAME"
-  lxc-start -n "$VM_NAME"
+  STOP_VM
+  sleep 5
+  START_VM
 }
 
 # FUNCTION=FORCED_REBOOT()
 # DESCRIPTION:
 #   Forcibly reboot the virtual machine
 FORCED_REBOOT() {
-  lxc-stop -n "$VM_NAME"
-  lxc-start -n "$VM_NAME"
+  lxc restart "$VM_NAME"
 }
 
 CREATE_DISKS() {
@@ -46,34 +46,36 @@ CREATE_DISKS() {
   mkdir -p ./disks_lxc
 
   while [[ "$count" -le "$disks_quantity" ]]; do
-    truncate -s "$allocated_disk_size" ./disks_lxc/disk"$count".img
+    local disk_path="./disks_lxc/disk$count.img"
+    truncate -s "$allocated_disk_size" "$disk_path"
+    echo "Disco $disk_path criado com tamanho $allocated_disk_size."
     ((count++))
   done
 }
 
 REMOVE_DISKS() {
-  local disk_files
-  disk_files=$(ls ./disks_lxc/*.img)
+  local disk_files=(./disks_lxc/*.img)
 
-  for disk_file in $disk_files; do
-    echo -e "\n--->> Deletando o disco: $disk_file \n"
-    rm -f "$disk_file"
-    sleep 0.2
-    if [[ -f $disk_file ]]; then
-      echo -e "Erro: Falha ao deletar o disco: $disk_file \n"
-    else
-      echo "Disk $disk_file Deletado com Sucesso"
+  for disk_file in "${disk_files[@]}"; do
+    if [[ -f "$disk_file" ]]; then
+      echo -e "\n--->> Deletando o disco: $disk_file \n"
+      rm -f "$disk_file"
+      if [[ -f "$disk_file" ]]; then
+        echo -e "Erro: Falha ao deletar o disco: $disk_file \n"
+      else
+        echo "Disco $disk_file deletado com sucesso."
+      fi
     fi
   done
 }
 
 # FUNCTION=ATTACH_DISK()
 # DESCRIPTION:
-#   Attaches disks to virtual machine
+# Attaches disks to virtual machine
 #
 # PARAMETERS:
-#   disk_path = $1
-#   target = $2
+# disk_path = $1
+# target = $2
 ATTACH_DISK() {
   local disk_path="$1"
   local target="$2"
@@ -88,9 +90,7 @@ ATTACH_DISK() {
     return 1
   fi
 
-  lxc device add "$VM_NAME" disk disk source="$disk_path" path="$target"
-
-  if [[ $? -eq 0 ]]; then
+  if lxc config device add "$VM_NAME" "$VM_NAME-disk" disk source="$disk_path" path="$target"; then
     echo "Disco anexado com sucesso ao alvo $target."
   else
     echo "ERRO: Falha ao anexar o disco ao alvo $target."
@@ -102,8 +102,7 @@ ATTACH_DISK() {
 #   Detach disks to virtual machine
 #
 # PARAMETERS:
-#   disk_path = $1
-#   target = $2
+#   target = $1  #Name of the device to detach
 DETACH_DISK() {
   local target="$1"
 
@@ -112,11 +111,9 @@ DETACH_DISK() {
     return 1
   fi
 
-  lxc device remove "$VM_NAME" "$target"
-
-  if [[ $? -eq 0 ]]; then
-    echo "Disco desanexado com sucesso do alvo $target."
+  if lxc config device remove "$VM_NAME" "$device_name"; then
+    echo "Disco desanexado com sucesso do dispositivo $device_name."
   else
-    echo "ERRO: Falha ao desanexar o disco do alvo $target."
+    echo "ERRO: Falha ao desanexar o disco do dispositivo $device_name."
   fi
 }
