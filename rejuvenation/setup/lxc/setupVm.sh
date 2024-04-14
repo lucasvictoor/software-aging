@@ -8,9 +8,6 @@ readonly VM_NAME="vmDebian"
 
 # FUNCTION=CREATE_VM()
 # DESCRIPTION:
-# 
-# Init - initialize a new VM debian12
-# Override - sets the disk size
 # Limits.cpu and limits.memory - configure cpu and memory limit
 # Disk source - adds and installation disk to the VM
 # Install openssh-server - installation ssh
