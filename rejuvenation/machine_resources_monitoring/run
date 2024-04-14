@@ -30,6 +30,10 @@ XEN_HEADERS() {
   echo "cpu;mem;vsz;rss;threads;swap;date_time" >logs/xen_monitoring-oxenstored.csv
 }
 
+LXC_HEADERS() {
+  echo "cpu;mem;vmrss;vsz;threads;swap;date_time" >logs/lxc_monitoring-test.csv
+}
+
 MACHINE_HEADERS
 
 stap -o logs/fragmentation.csv memory_fragmentation/fragmentation2b.stp &
@@ -52,7 +56,8 @@ case $VIRTUALIZER_TYPE in
     processes/xenbus_monitoring.sh &
     ;;
   "lxc")
-    echo "No information available for LXC at the moment"
+    LXC_HEADERS
+    processes/lxc_monitoring_test.sh &
     ;;
   *)
     echo "Unknown virtualizer type"
