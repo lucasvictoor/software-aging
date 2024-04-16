@@ -1,35 +1,51 @@
 general:
     runs: 5 # Changing this will affect the stress load, (max_stress_time + wait_after_stress) * (this value) will be total time of experiments
-    software: "podman" # User docker or podman
+    software: "podman" # Use docker or podman
     images_server_folder: "192.168.1.109:/root/images" # Images server address and folder, please set up ssh without credentials access
     run_only_monitoring: false
     old_software : false #used to creat logs folder
     system: "debian" #used to creat logs folder
     old_system: false #used to creat logs folder
+    scripts_folder: "/root/containers-aging"
 
 monitoring:
-    sleep_time: 5  # Interval that machine data will be collected
+    sleep_time: 60  # Sleep time the machine data will be collected in seconds
 
 stressload:
-    max_stress_time: 60  # Time the stress will be running in seconds
-    wait_after_stress: 30  # Interval time that the script will wait until next stress period in seconds
-    max_container_wait_time: 10  # Interval o wax wait time in seconds for containers to be executed, by default it starts at 0 and goes to this value
-    lifecycle_runs: 1 # number of lifecycle runs for each container
+    max_stress_time: 60  # Time the stress will be running in seconds (default 259200s = 3 days)
+    wait_after_stress: 30  #Time the script will wait until next stress period in seconds (default 43200 = 12h)
+
+    min_lifecycle_runs: 3 # min number of lifecycle runs for each container
+    max_lifecycle_runs: 5 # max number of lifecycle runs for each container
+
+    min_qtt_containers: 5 # min number of containers that will be created and deleted on each lifecycle run
+    max_qtt_containers: 10 # max number of containers that will be created and deleted on each lifecycle run
 
 containers:
   - name: postgres
     version: "15.6"
     host_port: 5432
     port: 5432
+    min_container_wait_time: 0
+    max_container_wait_time: 60
+
   - name: redis
     version: "7.2.4"
     host_port: 6379
     port: 6379
+    min_container_wait_time: 0
+    max_container_wait_time: 60
+
   - name: rabbitmq
     version: "3.13.1"
     host_port: 5672
     port: 5672
+    min_container_wait_time: 0
+    max_container_wait_time: 60
+
   - name: nginx
     version: "1.22.1"
     host_port: 8085
     port: 80
+    min_container_wait_time: 0
+    max_container_wait_time: 60
