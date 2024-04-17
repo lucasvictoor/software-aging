@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import sys
@@ -112,7 +113,8 @@ class Environment:
         self.start_monitoring()
 
         now = datetime.now()
-        end = datetime.now() + timedelta(seconds=(self.max_stress_time * self.runs + self.wait_after_stress * self.runs))
+        end = datetime.now() + timedelta(
+            seconds=(self.max_stress_time * self.runs + self.wait_after_stress * self.runs))
         seconds = (end - now).total_seconds()
         print(f"Script should end at around {end}")
 
@@ -123,7 +125,7 @@ class Environment:
             for current_run in range(self.runs):
                 self.__print_progress_bar(current_run, "Progress")
                 time.sleep(self.wait_after_stress)
-                self.stressload(self.max_stress_time)
+                self.init_containers_threads(self.max_stress_time)
 
             self.__print_progress_bar(self.runs, "Progress")
         print(f"Ended at {datetime.now()}")
@@ -164,21 +166,27 @@ class Environment:
             self.process_monitoring(date_time)
             time.sleep(self.sleep_time)
 
-    def container_lifecycle(self, container_name, host_port, container_port, min_container_wait_time, max_container_wait_time, run):
+    def container_lifecycle(self, image_name, host_port, container_port, min_container_wait_time,
+                            max_container_wait_time, run):
+
         sleep_time = random.randint(min_container_wait_time, max_container_wait_time)
         qtt_containers = random.randint(self.min_qtt_containers, self.max_qtt_containers)
 
         time.sleep(sleep_time)
 
-        load_image_time = get_time(f"{self.software} load -i {self.path}/{container_name}.tar -q")
+        load_image_time = get_time(f"{self.software} load -i {self.path}/{image_name}.tar -q")
 
-        execute_command(f"rm -f {self.path}/{container_name}.tar")
-
+        start_list = []
+        up_list = []
+        stop_list = []
+        remove_list = []
         for i in range(qtt_containers):
-
+            container_name = f"container-{run}-{i}"
 
             start_time = get_time(
-                f"{self.software} run --name {container_name} -td -p {host_port}:{container_port} --init {container_name}")
+                f"{self.software} run --name {container_name} -td -p {host_port}:{container_port} --init {image_name}")
+
+            start_list.append(start_time)
 
             up_time = execute_command(
                 f"{self.software} exec -i {container_name} sh -c \"test -e /root/log.txt && cat /root/log.txt\"",
@@ -189,34 +197,52 @@ class Environment:
                     f"{self.software} exec -i {container_name} sh -c \"test -e /root/log.txt && cat /root/log.txt\"",
                     continue_if_error=True, error_informative=False)
 
+            up_list.append(up_time)
+
             stop_time = get_time(f"{self.software} stop {container_name}")
+
+            stop_list.append(stop_time)
 
             remove_container_time = get_time(f"{self.software} rm {container_name}")
 
-        remove_image_time = get_time(f"{self.software} rmi {container_name}")
+            remove_list.append(remove_container_time)
+
+        remove_image_time = get_time(f"{self.software} rmi {image_name}")
 
         write_to_file(
-            f"{self.path}/{self.logs_dir}/{container_name}.csv",
+            f"{self.path}/{self.logs_dir}/{image_name}.csv",
             "load_image;start;up_time;stop;remove_container;remove_image",
-            f"{load_image_time};{start_time};{up_time};{stop_time};{remove_container_time};{remove_image_time}"
+            f"{load_image_time};{json.dumps(start_list)};{json.dumps(up_list)};{json.dumps(stop_list)};{json.dumps(remove_list)};{remove_image_time}"
         )
 
-    def container_thread(self, container, max_stress_time):
+    def stressload(self, container, max_stress_time):
         now = datetime.now()
         max_date = now + timedelta(seconds=max_stress_time)
 
         while datetime.now() < max_date:
             exec_runs = random.randint(self.min_lifecycle_runs, self.max_lifecycle_runs)
 
+            threads = []
             for index in range(exec_runs):
-                self.container_lifecycle(
-                    container["name"],
-                    container["host_port"],
-                    container["port"],
-                    container["min_container_wait_time"],
-                    container["max_container_wait_time"],
-                    index
+                thread = threading.Thread(
+                    target=self.container_lifecycle,
+                    name=container,
+                    args=(
+                        container["name"],
+                        container["host_port"],
+                        container["port"],
+                        container["min_container_wait_time"],
+                        container["max_container_wait_time"],
+                        index
+                    )
                 )
+
+                thread.daemon = True
+                thread.start()
+                threads.append(thread)
+
+            for thread in threads:
+                thread.join()
 
     def __print_progress_bar(self, current_run, text):
         progress_bar_size = 50
@@ -227,11 +253,11 @@ class Environment:
         )
         sys.stdout.flush()
 
-    def stressload(self, max_stress_time):
+    def init_containers_threads(self, max_stress_time):
         threads = []
         for container in self.containers:
             thread = threading.Thread(
-                target=self.container_thread,
+                target=self.stressload,
                 name=container,
                 args=(container, max_stress_time)
             )
