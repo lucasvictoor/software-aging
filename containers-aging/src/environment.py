@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import sys
@@ -46,9 +47,7 @@ class Environment:
     def __init__(
             self,
             containers: list,
-            max_container_wait_time: int,
             sleep_time: int,
-            lifecycle_runs: int,
             software: str,
             images_server_folder: str,
             max_stress_time: int,
@@ -57,10 +56,15 @@ class Environment:
             old_software: bool,
             system: str,
             old_system: bool,
-            run_only_monitoring: bool
+            run_only_monitoring: bool,
+            scripts_folder: str,
+            min_container_wait_time: int,
+            max_container_wait_time: int,
+            max_qtt_containers: int,
+            min_qtt_containers: int,
+            max_lifecycle_runs: int,
+            min_lifecycle_runs: int
     ):
-        script_path = sys.argv[0]
-        pasta = os.path.dirname(script_path)
         log_dir = software
         if old_software:
             log_dir = log_dir + "_old_"
@@ -76,15 +80,19 @@ class Environment:
         self.logs_dir = log_dir
         self.containers = containers
         self.max_container_wait_time = max_container_wait_time
-        self.path = os.path.dirname(pasta) + "/containers-aging"
+        self.path = scripts_folder
         self.sleep_time = sleep_time
-        self.lifecycle_runs = lifecycle_runs
         self.software = software
         self.images_server_folder = images_server_folder
         self.max_stress_time = max_stress_time
         self.wait_after_stress = wait_after_stress
         self.runs = runs
         self.run_only_monitoring = run_only_monitoring
+        self.min_container_wait_time = min_container_wait_time
+        self.max_qtt_containers = max_qtt_containers
+        self.min_qtt_containers = min_qtt_containers
+        self.max_lifecycle_runs = max_lifecycle_runs
+        self.min_lifecycle_runs = min_lifecycle_runs
 
     def clean(self):
         print("Cleaning old logs and containers")
@@ -101,42 +109,36 @@ class Environment:
 
     def run(self):
         self.clean()
-        #self.start_teastore()
+        self.start_teastore()
         self.start_monitoring()
 
         now = datetime.now()
-        end = datetime.now() + timedelta(seconds=(self.max_stress_time * self.runs + self.wait_after_stress * self.runs))
+        end = datetime.now() + timedelta(
+            seconds=(self.max_stress_time * self.runs + self.wait_after_stress * self.runs))
         seconds = (end - now).total_seconds()
         print(f"Script should end at around {end}")
 
         if self.run_only_monitoring:
             print(f"Waiting {seconds} seconds")
             time.sleep(seconds)
-            print(f"Ended at {datetime.now()}")
-            return
+        else:
+            for current_run in range(self.runs):
+                self.__print_progress_bar(current_run, "Progress")
+                time.sleep(self.wait_after_stress)
+                self.init_containers_threads(self.max_stress_time)
 
-        for current_run in range(self.runs):
-            self.__print_progress_bar(current_run, "Progress")
-            self.stressload(self.max_stress_time)
-            time.sleep(self.wait_after_stress)
-
-        self.__print_progress_bar(self.runs, "Progress")
+            self.__print_progress_bar(self.runs, "Progress")
         print(f"Ended at {datetime.now()}")
+        self.clear_containers_and_images()
 
     def start_teastore(self):
         print("Starting teastore")
 
-        def run_tea_store():
-            if self.software == "docker":
-                command = f"docker compose -f {self.path}/docker-compose.yaml up -d --quiet-pull"
-            else:
-                command = f"podman-compose -f {self.path}/docker-compose.yaml up -d --quiet-pull"
-            execute_command(command, informative=True)
-
-        monitoring_thread = threading.Thread(target=run_tea_store, name="tea-store")
-        monitoring_thread.daemon = True
-        monitoring_thread.start()
-        monitoring_thread.join()
+        if self.software == "docker":
+            command = f"docker compose -f {self.path}/docker-compose.yaml up -d --quiet-pull"
+        else:
+            command = f"podman-compose -f {self.path}/docker-compose.yaml up -d --quiet-pull"
+        execute_command(command, informative=True, error_informative=True)
 
     def systemtap(self):
         def run_systemtap():
@@ -149,7 +151,7 @@ class Environment:
 
     def start_monitoring(self):
         print("Starting monitoring scripts")
-        # self.systemtap()
+        self.systemtap()
         monitoring_thread = threading.Thread(target=self.machine_resources, name="monitoring")
         monitoring_thread.daemon = True
         monitoring_thread.start()
@@ -164,22 +166,27 @@ class Environment:
             self.process_monitoring(date_time)
             time.sleep(self.sleep_time)
 
-    def container_lifecycle(self, sleep_time, container):
-        container_name = container["name"]
-        host_port = container["host_port"]
-        container_port = container["port"]
-        for _ in range(self.lifecycle_runs):
-            time.sleep(sleep_time)
+    def container_lifecycle(self, image_name, host_port, container_port, min_container_wait_time,
+                            max_container_wait_time, run):
 
-            execute_command(
-                f"scp root@{self.images_server_folder}/{container_name}.tar {self.path}/{container_name}.tar")
+        sleep_time = random.randint(min_container_wait_time, max_container_wait_time)
+        qtt_containers = random.randint(self.min_qtt_containers, self.max_qtt_containers)
 
-            load_image_time = get_time(f"{self.software} load -i {self.path}/{container_name}.tar -q")
+        time.sleep(sleep_time)
 
-            execute_command(f"rm -f {self.path}/{container_name}.tar")
+        load_image_time = get_time(f"{self.software} load -i {self.path}/{image_name}.tar -q")
+
+        start_list = []
+        up_list = []
+        stop_list = []
+        remove_list = []
+        for i in range(qtt_containers):
+            container_name = f"container-{run}-{i}"
 
             start_time = get_time(
-                f"{self.software} run --name {container_name} -td -p {host_port}:{container_port} --init {container_name}")
+                f"{self.software} run --name {container_name} -td -p {host_port}:{container_port} --init {image_name}")
+
+            start_list.append(start_time)
 
             up_time = execute_command(
                 f"{self.software} exec -i {container_name} sh -c \"test -e /root/log.txt && cat /root/log.txt\"",
@@ -190,16 +197,52 @@ class Environment:
                     f"{self.software} exec -i {container_name} sh -c \"test -e /root/log.txt && cat /root/log.txt\"",
                     continue_if_error=True, error_informative=False)
 
+            up_list.append(up_time)
+
             stop_time = get_time(f"{self.software} stop {container_name}")
+
+            stop_list.append(stop_time)
 
             remove_container_time = get_time(f"{self.software} rm {container_name}")
 
-            remove_image_time = get_time(f"{self.software} rmi {container_name}")
-            write_to_file(
-                f"{self.path}/{self.logs_dir}/{container_name}.csv",
-                "load_image;start;up;stop;remove_container;remove_image",
-                f"{load_image_time};{start_time};{up_time};{stop_time};{remove_container_time};{remove_image_time}"
-            )
+            remove_list.append(remove_container_time)
+
+        remove_image_time = get_time(f"{self.software} rmi {image_name}")
+
+        write_to_file(
+            f"{self.path}/{self.logs_dir}/{image_name}.csv",
+            "load_image;start;up_time;stop;remove_container;remove_image",
+            f"{load_image_time};{json.dumps(start_list)};{json.dumps(up_list)};{json.dumps(stop_list)};{json.dumps(remove_list)};{remove_image_time}"
+        )
+
+    def stressload(self, container, max_stress_time):
+        now = datetime.now()
+        max_date = now + timedelta(seconds=max_stress_time)
+
+        while datetime.now() < max_date:
+            exec_runs = random.randint(self.min_lifecycle_runs, self.max_lifecycle_runs)
+
+            threads = []
+            for index in range(exec_runs):
+                thread = threading.Thread(
+                    target=self.container_lifecycle,
+                    name=container,
+                    args=(
+                        container["name"],
+                        container["host_port"],
+                        container["port"],
+                        container["min_container_wait_time"],
+                        container["max_container_wait_time"],
+                        index
+                    )
+                )
+
+                thread.daemon = True
+                thread.start()
+                threads.append(thread)
+
+            for thread in threads:
+                thread.join()
 
     def __print_progress_bar(self, current_run, text):
         progress_bar_size = 50
@@ -210,32 +253,21 @@ class Environment:
         )
         sys.stdout.flush()
 
-    def stressload(self, max_stress_time):
-        bag = self.containers.copy()
-        random.shuffle(bag)
+    def init_containers_threads(self, max_stress_time):
+        threads = []
+        for container in self.containers:
+            thread = threading.Thread(
+                target=self.stressload,
+                name=container,
+                args=(container, max_stress_time)
+            )
 
-        now = datetime.now()
-        max_date = now + timedelta(seconds=max_stress_time)
+            thread.daemon = True
+            thread.start()
+            threads.append(thread)
 
-        while datetime.now() < max_date:
-            threads = []
-            for container in bag:
-                sleep_time = random.randint(1, self.max_container_wait_time)
-
-                container_thread = threading.Thread(
-                    target=self.container_lifecycle,
-                    name=container,
-                    args=(sleep_time, container)
-                )
-
-                container_thread.daemon = True
-                container_thread.start()
-                threads.append(container_thread)
-
-            random.shuffle(bag)
-
-            for thread in threads:
-                thread.join()
+        for thread in threads:
+            thread.join()
 
     def disk_monitoring(self, date_time):
         comando = "df | grep '/$' | awk '{print $3}'"
