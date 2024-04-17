@@ -27,15 +27,33 @@ INSTALL_UTILS() {
 LXC_INSTALL() {
   if ! dpkg -l lxc | grep -q '^ii'; then
     echo "LXC não está instalado, instalando..."
-    if ! sudo apt-get install lxc -y; then
-      echo -e "\nERRO: Erro ao tentar instalar o LXC\n" >&2
+    if ! sudo apt-get install lxc lxd lxd-client -y; then
+      echo -e "\nERRO: Erro ao tentar instalar o LXC/LXD\n" >&2
       exit 1
-    else
-      echo -e "\nLXC instalado com sucesso\n"
     fi
+    echo -e "\nLXC/LXD instalado com sucesso, inicializando LXD...\n"
+    INITIALIZE_LXD
   else
-    echo "LXC já está instalado, ignorando."
+    echo "LXC/LXD já está instalado, verificando configuração..."
+    INITIALIZE_LXD
   fi
+}
+
+# INITIALIZE_LXD()
+# DESCRIPTION:
+# Initialize LXD with a default storage pool and network
+INITIALIZE_LXD() {
+  # Check if a default storage pool exists
+  if ! sudo lxc storage list | grep -q "default"; then
+    sudo lxc storage create default dir
+  fi
+
+  # Check if a default NAT network exists
+  if ! sudo lxc network list | grep -q "lxdbr0"; then
+    sudo lxc network create lxdbr0 ipv4.address=auto ipv4.nat=true ipv6.address=none ipv6.nat=false
+  fi
+
+  echo "LXD configurado com storage pool padrão e rede NAT."
 }
 
 # INSTALL_DEPENDENCIES()
